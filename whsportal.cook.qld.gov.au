@@ -1,0 +1,198 @@
+# HTTPS server block for Plone proxy
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name whsportal.cook.qld.gov.au;
+
+    # SSL Configuration
+    ssl_certificate /usr/local/ssl/certs/cook.qld.gov.au.crt;
+    ssl_certificate_key /usr/local/ssl/private/cook.qld.gov.au.key;
+    ssl_trusted_certificate /usr/local/ssl/certs/intermediate.crt;
+    
+    # Modern SSL settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    
+    # Security headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # Logging
+    error_log /var/log/nginx/whsportal-error.log;
+    access_log /var/log/nginx/whsportal-access.log combined;
+
+    # Default charset
+    charset utf-8;
+
+    # Client upload size for Plone
+    client_max_body_size 50M;
+    client_body_buffer_size 128k;
+
+    # Proxy timeouts for Plone
+    proxy_connect_timeout 90;
+    proxy_send_timeout 90;
+    proxy_read_timeout 90;
+    proxy_buffer_size 16k;
+    proxy_buffers 32 16k;
+    proxy_busy_buffers_size 64k;
+
+    # Gzip compression configuration
+    gzip on;
+    gzip_http_version 1.1;
+    gzip_vary on;
+    gzip_comp_level 6;
+    gzip_proxied any;
+    gzip_types text/plain text/css text/xml text/javascript 
+                application/json application/javascript application/x-javascript 
+                application/xml application/xml+rss application/rss+xml image/svg+xml;
+    gzip_disable "msie6";
+    gzip_min_length 1000;
+
+    # Cache Plone production bundles (CSS/JS with unique timestamps)
+    location ~* ^/\+\+plone\+\+production/\+\+unique\+\+[^/]+/(default|logged-in|diazo)\.(js|css)$ {
+        rewrite ^(.*)$ /VirtualHostBase/https/whsportal.cook.qld.gov.au:443/council/VirtualHostRoot$1 break;
+        
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Long cache time - these URLs change when content changes
+        proxy_cache plone_cache;
+        proxy_cache_valid 200 30d;
+        proxy_cache_valid 404 1m;
+        proxy_ignore_headers Cache-Control Expires;
+        add_header X-Cache-Status $upstream_cache_status;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+    }
+
+    # Cache add-on resources (like ftw.calendar)
+    location ~* ^/\+\+resource\+\+.*\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        rewrite ^(.*)$ /VirtualHostBase/https/whsportal.cook.qld.gov.au:443/council/VirtualHostRoot$1 break;
+        
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Strip query parameters for cache key
+        if ($args ~* "version=") {
+            set $cache_key $uri;
+        }
+        
+        proxy_cache plone_cache;
+        proxy_cache_key "$scheme$request_method$host$cache_key";
+        proxy_cache_valid 200 7d;
+        proxy_cache_valid 404 1m;
+        add_header X-Cache-Status $upstream_cache_status;
+        add_header Cache-Control "public, max-age=604800";
+    }
+
+    # Cache other Plone static resources
+    location ~* ^/\+\+plone\+\+[^/]+/.*\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        rewrite ^(.*)$ /VirtualHostBase/https/whsportal.cook.qld.gov.au:443/council/VirtualHostRoot$1 break;
+        
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        proxy_cache plone_cache;
+        proxy_cache_valid 200 7d;
+        proxy_cache_valid 404 1m;
+        add_header X-Cache-Status $upstream_cache_status;
+        add_header Cache-Control "public, max-age=604800";
+    }
+
+    # Cache image scales and other media
+    location ~* ^/.*\.(png|jpg|jpeg|gif|ico|svg|pdf|doc|docx|xls|xlsx|zip)$ {
+        # Skip caching for edit/manage URLs
+        if ($uri ~* "/(edit|manage|@@|portal_)") {
+            set $no_cache 1;
+        }
+        
+        rewrite ^(.*)$ /VirtualHostBase/https/whsportal.cook.qld.gov.au:443/council/VirtualHostRoot$1 break;
+        
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        proxy_cache plone_cache;
+        proxy_cache_bypass $no_cache;
+        proxy_no_cache $no_cache;
+        proxy_cache_valid 200 1d;
+        proxy_cache_valid 404 1m;
+        add_header X-Cache-Status $upstream_cache_status;
+    }
+
+    # ZMI static resources - no VirtualHostMonster rewriting
+    location ~ ^/\+\+resource\+\+zmi/ {
+        proxy_pass http://127.0.0.1:8080;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_cache plone_cache;
+        proxy_cache_valid 200 7d;
+        add_header Cache-Control "public, max-age=604800";
+    }
+
+    # Zope Management Interface - no VirtualHostMonster rewriting
+    location ~ ^/(manage|manage_main|Control_Panel) {
+        proxy_pass http://127.0.0.1:8080;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Port $server_port;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_cache_bypass 1;
+        proxy_no_cache 1;
+    }
+
+    # Main Plone proxy configuration (no caching for dynamic content)
+    location / {
+        # VirtualHostMonster rewrite for Plone with HTTPS
+        rewrite ^(.*)$ /VirtualHostBase/https/whsportal.cook.qld.gov.au:443/council/VirtualHostRoot$1 break;
+
+        # Proxy to Plone backend
+        proxy_pass http://127.0.0.1:8080;
+        
+        # Required proxy headers for Plone
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Port $server_port;
+        
+        # Plone-specific headers
+        proxy_set_header X-XDV "true";
+        proxy_set_header Accept-Encoding "";
+        
+        # WebSocket support for Plone (if needed)
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # Explicitly disable caching for dynamic content
+        proxy_cache_bypass 1;
+        proxy_no_cache 1;
+    }
+}

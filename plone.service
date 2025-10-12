@@ -1,0 +1,23 @@
+[Unit]
+Description=Plone 6 WHS Portal
+After=network.target
+
+[Service]
+Type=simple
+User=cscadmin
+Group=cscadmin
+WorkingDirectory=/opt/plone
+Environment="PATH=/opt/plone/venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/opt/plone/venv/bin/runwsgi -v /opt/plone/instance/etc/zope.ini
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=plone-whs
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

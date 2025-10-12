@@ -1,0 +1,10 @@
+# Allow cscadmin to restart plone service and manage nginx cache without password
+# Install with: sudo visudo -c -f /etc/sudoers.d/plone && sudo cp sudoers.d-plone /etc/sudoers.d/plone
+cscadmin ALL=(ALL) NOPASSWD: /bin/systemctl start plone
+cscadmin ALL=(ALL) NOPASSWD: /bin/systemctl stop plone
+cscadmin ALL=(ALL) NOPASSWD: /bin/systemctl restart plone
+cscadmin ALL=(ALL) NOPASSWD: /bin/systemctl status plone
+cscadmin ALL=(ALL) NOPASSWD: /bin/journalctl -u plone
+cscadmin ALL=(ALL) NOPASSWD: /bin/rm -rf /opt/cache/nginx/plone/*
+cscadmin ALL=(ALL) NOPASSWD: /bin/systemctl restart nginx
+cscadmin ALL=(ALL) NOPASSWD: /bin/systemctl status nginx

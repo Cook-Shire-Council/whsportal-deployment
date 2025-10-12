@@ -1,0 +1,122 @@
+# WHSPortal Infrastructure Repository
+# This repo contains deployment scripts, config files, and documentation
+# Addons are managed in separate repositories
+
+# ==============================================================================
+# STRATEGY: Ignore everything by default, then explicitly whitelist safe files
+# ==============================================================================
+
+# Ignore everything
+*
+
+# ==============================================================================
+# ADDON DIRECTORIES (separate git repositories - explicitly excluded)
+# ==============================================================================
+# These directories are managed in their own git repositories
+# The wildcard * above already excludes them, but listing here for clarity
+csc/
+csc.whstheme/
+csc.teams/
+whs-content-import-tools/
+
+# ==============================================================================
+# EXPLICITLY ALLOW: Deployment Scripts
+# ==============================================================================
+!deploy.sh
+!deploy-systemd.sh
+!setup-systemd.sh
+
+# ==============================================================================
+# EXPLICITLY ALLOW: Service & Configuration Files
+# ==============================================================================
+!plone.service
+!sudoers.d-plone
+!whsportal.cook.qld.gov.au
+
+# ==============================================================================
+# EXPLICITLY ALLOW: Documentation
+# ==============================================================================
+!*.md
+!.claude_instructions
+
+# ==============================================================================
+# EXPLICITLY ALLOW: Utility Scripts
+# ==============================================================================
+!run_upgrade.py
+!fix_ldap_mappings.py
+!restore_ldap_mappings.py
+!add_ldap_fields.py
+
+# ==============================================================================
+# EXPLICITLY ALLOW: Logo Files
+# ==============================================================================
+!CSC_logo_Intranet.png
+!CSC_logo_WHSPortal.png
+
+# ==============================================================================
+# EXPLICITLY ALLOW: Git files
+# ==============================================================================
+!.gitignore
+!.gitattributes
+
+# ==============================================================================
+# CRITICAL - NEVER COMMIT (Secrets and Credentials)
+# ==============================================================================
+.env
+instance.yaml
+01-network-manager-all.yaml
+
+# ==============================================================================
+# NEVER COMMIT - Sensitive Documents
+# ==============================================================================
+*.pdf
+
+# ==============================================================================
+# NEVER COMMIT - Session Logs and Temporary Files
+# ==============================================================================
+*_session.txt
+ticketupdate.txt
+
+# ==============================================================================
+# NEVER COMMIT - Build Artifacts
+# ==============================================================================
+*.whl
+*.zip
+*.tar.gz
+*.egg-info/
+dist/
+build/
+
+# ==============================================================================
+# NEVER COMMIT - Test Files and Old Templates
+# ==============================================================================
+test_*.py
+test_*.html
+ver*.pt
+
+# ==============================================================================
+# NEVER COMMIT - IDE and Editor Files
+# ==============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ==============================================================================
+# NEVER COMMIT - Python Runtime
+# ==============================================================================
+venv/
+env/
+*.pyc
+__pycache__/
+
+# ==============================================================================
+# NEVER COMMIT - Working Directories
+# ==============================================================================
+Content/
+import_working_copy/
+import_scripts.OLD_BACKUP/
+ansible/
+.claude/
+etc/

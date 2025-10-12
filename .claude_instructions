@@ -1,0 +1,171 @@
+# WHS Portal Project Instructions
+
+## Project Context
+This is a Workplace Health and Safety (WHS) portal for Cook Shire Council in Queensland, Australia. The portal is being developed using Plone 6.1 Content Management Framework as a Classic site.
+
+**Project Structure:**
+The WHSPortal project consists of multiple independent repositories housed in a common workspace directory (`/home/ceo/Development/WHSPortal/`):
+
+- `csc/` - **csc.whs** (v0.9.20): Core WHS incident & hazard management addon [git: main branch]
+- `csc.whstheme/` - **cook.whs.barceloneta** (v1.0.27): Custom theme with button-grid folder navigation [git: main branch]
+- `csc.teams/` - **csc.teams**: Team listing addon with LDAP integration [git: main branch]
+- `whs-content-import-tools/` - Content migration utilities (not a Plone addon) [git: main branch]
+
+## Environment Details
+
+### Development Server (whsportaldev)
+- **OS**: Ubuntu 24.04 VM on local network
+- **Access**: SSH as cscadmin user (key-based authentication configured)
+- **Hostname**: whsportaldev
+- **Plone Instance Path**: `/opt/plone`
+- **Virtual Environment**: `/opt/plone/venv`
+- **Start Command**: `/opt/plone/venv/bin/runwsgi -v /opt/plone/instance/etc/zope.ini`
+- **Deployment Model**: Single instance running in screen session for direct console output
+- **Reverse Proxy**: nginx at `/etc/nginx/sites-available/whsportal.cook.qld.gov.au`
+- **Public URL**: https://whsportal.cook.qld.gov.au
+- **User Access**: WHS Office staff provide feedback via public URL
+
+### Local Development
+- **OS**: Ubuntu VM on laptop (current session environment)
+- **Purpose**: Code editing and development (cyber security role separation)
+- **Sync Method**: SSH-based rsync to whsportaldev
+
+### Team
+- **Team Size**: 5 IT staff supporting 180 organizational staff
+- **Role**: Manager of Information and Communication
+- **Stakeholder**: WHS Office (provides requirements and feedback)
+
+## Development Preferences
+
+### Response Style
+1. **Always provide clear, direct answers** - No vague responses
+2. **Include step-by-step explanations** of reasoning and approach
+3. **Critically review proposals** against best practices for the subject matter
+4. **State clearly when something won't work** and explain why
+5. **Provide practical action plans** with clear implementation steps
+6. **Break down broad questions** into manageable parts
+
+### Expertise Level
+- Act as a domain expert (software developer, ICT manager, system administrator as appropriate)
+- Apply deep reasoning at full capacity
+- Validate conclusions against best practices and external references
+- Consider constraints of small-to-medium local government IT operations
+
+### Technical Approach
+- Prioritize Plone 6.1 Classic site conventions and best practices
+- Consider security implications (cyber security role separation in place)
+- Account for small team constraints and maintainability
+- Validate against Plone documentation and community standards
+
+## Git Repository Structure
+
+**IMPORTANT**: The WHSPortal workspace is NOT a single git repository. Each component is independently version-controlled:
+
+### Active Repositories (each with own git)
+
+1. **csc/** - [git repository]
+   - Package: `csc.whs` (currently v0.9.20, profile v16)
+   - Purpose: Core WHS incident & hazard reporting and management
+   - Features: Incident/hazard content types, workflows, LDAP integration, GPS mapping, 5×5 risk matrix, email notifications, custom folder listings
+   - Built from: `pyproject.toml`
+   - Recent: v0.9.18-0.9.20 added custom folder listing views
+
+2. **csc.whstheme/** - [git repository]
+   - Package: `cook.whs.barceloneta` (v1.0.27)
+   - Purpose: Custom Barceloneta theme extension
+   - Features: Button-grid folder navigation, 12-color palette, file display in folders, LDAP member properties
+   - Built from: `pyproject.toml`
+
+3. **csc.teams/** - [git repository]
+   - Package: `csc.teams` (v1.0.x)
+   - Purpose: Team listing with LDAP integration
+   - Features: User picker, auto-display of AD properties, flexible display options
+   - Built from: `pyproject.toml`
+
+4. **whs-content-import-tools/** - [git repository]
+   - NOT a Plone addon - standalone Python tools
+   - Purpose: Automated content migration from filesystem to Plone
+   - Features: AI metadata extraction (Claude), collective.exportimport integration, 100% extraction success rate
+   - Phase 5 status: Content import in progress (3/8 batches imported)
+
+### Project Root (WHSPortal/) - NOT under git control
+- Contains: Deployment scripts, configuration files, documentation
+- Key files: `deploy-systemd.sh`, `sudoers.d-plone`, `plone.service`, `PROJECT_STATUS.md`
+- These infrastructure files should be versioned separately (not yet in git)
+
+## Development Workflow
+
+### Automated Deployment (Current Method)
+Use `deploy.sh` script for automated build-deploy-restart cycle:
+
+```bash
+# Deploy individual addons
+./deploy.sh csc          # Deploy csc.whs only
+./deploy.sh theme        # Deploy cook.whs.barceloneta only
+./deploy.sh both         # Deploy both addons
+
+# Deploy without restarting
+./deploy.sh csc --no-restart
+```
+
+**Script performs:**
+1. Cleans previous builds
+2. Builds wheel from pyproject.toml
+3. Copies wheel to whsportaldev via SSH
+4. Installs with pip --force-reinstall --no-deps
+5. Optionally restarts Plone instance
+6. Provides verification of installation
+
+**Plone Instance Management:**
+- Instance runs in screen session named 'plone'
+- View logs: `ssh whsportaldev 'screen -r plone'`
+- Manual restart: Ctrl+C in screen, then run start command
+- Log file: `/opt/plone/instance/var/log/instance.log`
+
+### Why Wheel Deployment
+- Tests actual packaging (production-like)
+- Proper version management
+- Clean, repeatable process
+- Catches packaging errors early
+- Professional deployment method
+
+## Development Standards
+- Follow Plone addon development best practices
+- Maintain clean separation between theme and functionality
+- Consider Australian local government context and requirements
+- Prioritize workplace health and safety use cases
+
+## Quick Start Guide for New Work Sessions
+
+When starting work on the WHSPortal project, check these files in order:
+
+1. **PROJECT_STATUS.md** (project root) - Current version (v0.9.20), demo readiness, recent changes
+2. **This file** (.claude_instructions) - Development workflow and project structure
+3. **csc/README.md** - csc.whs addon features and version history
+4. **Git status in addon directories** - Check for uncommitted changes:
+   ```bash
+   cd /home/ceo/Development/WHSPortal/csc && git status
+   cd /home/ceo/Development/WHSPortal/csc.whstheme && git status
+   cd /home/ceo/Development/WHSPortal/csc.teams && git status
+   cd /home/ceo/Development/WHSPortal/whs-content-import-tools && git status
+   ```
+
+## Key Project Files Reference
+
+**Documentation:**
+- `PROJECT_STATUS.md` - Overall project status, version timeline, demo features
+- `HAZARD_IMPLEMENTATION_STATUS.md` - Hazard reporting system details
+- `csc/README.md` - csc.whs addon documentation
+- Various implementation docs (form_update_implementation.md, etc.)
+
+**Deployment & Infrastructure:**
+- `deploy-systemd.sh` - Main deployment script (automated wheel deployment + nginx cache clear)
+- `setup-systemd.sh` - Systemd service setup
+- `sudoers.d-plone` - Passwordless sudo configuration
+- `plone.service` - Systemd service definition
+- `whsportal.cook.qld.gov.au` - Nginx reverse proxy configuration
+
+**Utility Scripts:**
+- `fix_ldap_mappings.py` - LDAP configuration utility
+- `restore_ldap_mappings.py` - LDAP restore utility
+- `run_upgrade.py` - GenericSetup profile upgrade utility
