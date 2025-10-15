@@ -86,12 +86,21 @@ The WHSPortal project consists of multiple independent repositories housed in a 
    - NOT a Plone addon - standalone Python tools
    - Purpose: Automated content migration from filesystem to Plone
    - Features: AI metadata extraction (Claude), collective.exportimport integration, 100% extraction success rate
-   - Phase 5 status: Content import in progress (3/8 batches imported)
+   - Phase 5 status: Content import complete (8/8 batches + 8 new files prepared)
+   - Repository: https://github.com/Cook-Shire-Council/whs-content-import-tools
 
-### Project Root (WHSPortal/) - NOT under git control
-- Contains: Deployment scripts, configuration files, documentation
-- Key files: `deploy-systemd.sh`, `sudoers.d-plone`, `plone.service`, `PROJECT_STATUS.md`
-- These infrastructure files should be versioned separately (not yet in git)
+5. **whsportal-deployment/** - [git repository] (Project Root)
+   - Infrastructure repository for deployment scripts, configs, and documentation
+   - Contains: `deploy-systemd.sh`, `sudoers.d-plone`, `plone.service`, `PROJECT_STATUS.md`, `.claude_instructions`
+   - Created: 2025-10-13
+   - Repository: https://github.com/Cook-Shire-Council/whsportal-deployment
+
+### Virtual Environment Location
+- **Location**: `/home/ceo/Development/WHSPortal/venv` (project root)
+- **Purpose**: Shared virtual environment for all tools (import scripts, utilities)
+- **Activation**: `source /home/ceo/Development/WHSPortal/venv/bin/activate`
+- **Important**: whs-content-import-tools uses the PROJECT ROOT venv, not a local one
+- **Libraries**: anthropic, docx2txt, openpyxl, python-pptx, etc.
 
 ## Development Workflow
 
@@ -169,3 +178,8 @@ When starting work on the WHSPortal project, check these files in order:
 - `fix_ldap_mappings.py` - LDAP configuration utility
 - `restore_ldap_mappings.py` - LDAP restore utility
 - `run_upgrade.py` - GenericSetup profile upgrade utility
+
+**Content Import Tools:**
+- `whs-content-import-tools/import_scripts/check_new_files.py` - Compare filesystem vs Plone to identify new content
+- Shows which files are new, existing, or possibly modified
+- Essential for pre-import validation and avoiding duplicates
