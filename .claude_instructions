@@ -138,6 +138,58 @@ Use `deploy.sh` script for automated build-deploy-restart cycle:
 - Catches packaging errors early
 - Professional deployment method
 
+## Git Workflow
+
+### Committing Changes
+Standard git workflow for local commits:
+
+```bash
+# Check status
+cd /home/ceo/Development/WHSPortal/csc  # or other repo
+git status
+
+# Stage changes
+git add -A  # or specific files
+
+# Commit with message
+git commit -m "Your commit message"
+```
+
+### Pushing to GitHub (Using GitHub CLI)
+**Preferred method:** Use GitHub CLI (`gh`) for authentication and pushing:
+
+```bash
+# Push to remote (after committing)
+cd /home/ceo/Development/WHSPortal/csc  # or other repo
+gh repo sync  # Syncs current branch with remote
+
+# OR use standard git push (gh handles authentication)
+git push
+```
+
+**Important notes:**
+- GitHub CLI (`gh`) is the standard method for this project
+- Each repository (csc/, csc.whstheme/, csc.teams/, whs-content-import-tools/, project root) is independent
+- Always push from within the specific repository directory
+- Check remote status: `gh repo view --web` (opens GitHub in browser)
+
+### Common Git Operations
+
+```bash
+# View recent commits
+git log --oneline -10
+
+# Check what will be pushed
+git log origin/main..HEAD
+
+# View commit details
+git show <commit-hash>
+
+# Check remote status
+git remote -v
+gh repo view
+```
+
 ## Development Standards
 - Follow Plone addon development best practices
 - Maintain clean separation between theme and functionality
