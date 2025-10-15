@@ -64,11 +64,11 @@ The WHSPortal project consists of multiple independent repositories housed in a 
 ### Active Repositories (each with own git)
 
 1. **csc/** - [git repository]
-   - Package: `csc.whs` (currently v0.10.3, profile v17)
+   - Package: `csc.whs` (currently v0.10.4, profile v17)
    - Purpose: Core WHS incident & hazard reporting and management
    - Features: Incident/hazard content types, workflows, LDAP integration, GPS mapping, 5×5 risk matrix, email notifications, custom folder listings
    - Built from: `pyproject.toml`
-   - Recent: v0.10.0-0.10.3 Phase 1 complete - Enhanced incident form with 11 new fields (injury detail, property damage, preliminary observations)
+   - Recent: v0.10.4 Phase 2.1 - Enhanced checkbox grid layout for improved scannability
 
 2. **csc.whstheme/** - [git repository]
    - Package: `cook.whs.barceloneta` (v1.0.27)
@@ -198,6 +198,21 @@ gh repo view
 
 ## Current Development Status (Updated: 2025-10-15)
 
+### **Phase 2.1: Enhanced Checkbox Grid Layout - COMPLETE ✅**
+- **Version**: csc.whs v0.10.4 (Profile v17)
+- **Status**: Deployed, tested, and approved on whsportaldev
+- **Commit**: c7420af "Phase 2.1: Enhanced Checkbox Grid Layout v0.10.4"
+
+**Achievements**:
+- ✅ Multi-column CSS grid layout (2-4 columns based on screen size)
+- ✅ 50% reduction in vertical space for 38 body area checkboxes
+- ✅ Responsive breakpoints for mobile/tablet/desktop
+- ✅ Visual enhancements (hover effects, checked state highlighting)
+- ✅ Custom scrollbar styling
+- ✅ Full accessibility support (keyboard nav, high contrast, reduced motion)
+- ✅ Tested and approved on mobile and desktop devices
+- ✅ 207 lines of CSS added
+
 ### **Phase 1: Enhanced Incident Form - COMPLETE ✅**
 - **Version**: csc.whs v0.10.3 (Profile v17)
 - **Status**: Deployed and tested on whsportaldev
@@ -210,22 +225,24 @@ gh repo view
 - ✅ Conditional section visibility (auto-skip irrelevant sections)
 - ✅ Notifiable incident warning for WorkSafe QLD
 - ✅ Full backwards compatibility maintained
-- ✅ Documentation updated (README.md, INCIDENT_FORM_PHASE1_CHANGES.md)
 - ✅ ~1,024 lines of code added across 13 files
 
-**Date Format Decision**: Australian date format (DD/MM/YYYY) attempted but left in current state - not pursuing further for Phase 1
+### **Phase 2: Remaining Enhancements - PLANNING**
+**Next Decision Point**: Evaluate if SVG body map is still needed with improved grid layout
 
-### **Phase 2: Future Enhancements - PLANNING**
-Identified improvements for future releases:
-1. SVG body map visual component (replace 38 checkboxes with interactive diagram)
-2. Optional hiding of legacy fields from Dexterity forms
-3. Enhanced CSS for checkbox grid layout (scrollable, multi-column)
-4. Additional fieldset organization for improved UX
+**Planned Features**:
+1. **SVG body map** (DEFERRED - pending evaluation of grid layout sufficiency)
+2. **Hide legacy fields** from Dexterity forms (LOW EFFORT - ready to implement)
+3. **Conditional visibility enhancements** (OPTIONAL)
+4. **Additional fieldset organization** (OPTIONAL)
+
+**Documentation**: See `Phase_2_csc.whs_form_update_implementation_plan.md` for complete plan
 
 ### **Next Steps**
-- Update PROJECT_STATUS.md with Phase 1 completion
-- Update ANONYMOUS_FORM_UPDATE_SUMMARY.md with deployment confirmation
-- Consider starting Phase 2 planning or other WHS enhancements
+- Gather WHS Office feedback on grid layout
+- Decide if SVG body map is still needed
+- If grid is sufficient, proceed to hide legacy fields
+- Update PROJECT_STATUS.md with Phase 2.1 completion
 
 ## Quick Start Guide for New Work Sessions
 
