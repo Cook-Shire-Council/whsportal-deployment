@@ -105,16 +105,13 @@ The WHSPortal project consists of multiple independent repositories housed in a 
 ## Development Workflow
 
 ### Automated Deployment (Current Method)
-Use `deploy.sh` script for automated build-deploy-restart cycle:
+Use `deploy-systemd.sh` script for automated build-deploy-restart cycle:
 
 ```bash
 # Deploy individual addons
-./deploy.sh csc          # Deploy csc.whs only
-./deploy.sh theme        # Deploy cook.whs.barceloneta only
-./deploy.sh both         # Deploy both addons
-
-# Deploy without restarting
-./deploy.sh csc --no-restart
+./deploy-systemd.sh csc          # Deploy csc.whs only
+./deploy-systemd.sh theme        # Deploy cook.whs.barceloneta only
+./deploy-systemd.sh both         # Deploy both addons
 ```
 
 **Script performs:**
@@ -122,14 +119,20 @@ Use `deploy.sh` script for automated build-deploy-restart cycle:
 2. Builds wheel from pyproject.toml
 3. Copies wheel to whsportaldev via SSH
 4. Installs with pip --force-reinstall --no-deps
-5. Optionally restarts Plone instance
-6. Provides verification of installation
+5. Restarts Plone via systemd (`sudo systemctl restart plone`)
+6. Clears nginx cache
+7. Verifies service is active and provides status
 
-**Plone Instance Management:**
-- Instance runs in screen session named 'plone'
-- View logs: `ssh whsportaldev 'screen -r plone'`
-- Manual restart: Ctrl+C in screen, then run start command
+**Plone Instance Management (systemd):**
+- Plone runs as systemd service: `plone.service`
+- Check status: `ssh whsportaldev 'sudo systemctl status plone'`
+- View logs: `ssh whsportaldev 'sudo journalctl -u plone -f'`
+- Manual restart: `ssh whsportaldev 'sudo systemctl restart plone'`
 - Log file: `/opt/plone/instance/var/log/instance.log`
+
+**Prerequisites:**
+- Systemd service configured (via `setup-systemd.sh`)
+- Sudoers configured for passwordless `systemctl restart plone`
 
 ### Why Wheel Deployment
 - Tests actual packaging (production-like)
@@ -137,6 +140,13 @@ Use `deploy.sh` script for automated build-deploy-restart cycle:
 - Clean, repeatable process
 - Catches packaging errors early
 - Professional deployment method
+
+### Vocabulary and Schema Changes
+When updating Python code (vocabularies, schemas):
+- No special upgrade step needed
+- Changes are loaded at Plone startup
+- Simply deploy with `./deploy-systemd.sh csc`
+- Systemd restart automatically loads new code
 
 ## Git Workflow
 
