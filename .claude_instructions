@@ -64,11 +64,11 @@ The WHSPortal project consists of multiple independent repositories housed in a 
 ### Active Repositories (each with own git)
 
 1. **csc/** - [git repository]
-   - Package: `csc.whs` (currently v0.9.20, profile v16)
+   - Package: `csc.whs` (currently v0.10.3, profile v17)
    - Purpose: Core WHS incident & hazard reporting and management
    - Features: Incident/hazard content types, workflows, LDAP integration, GPS mapping, 5×5 risk matrix, email notifications, custom folder listings
    - Built from: `pyproject.toml`
-   - Recent: v0.9.18-0.9.20 added custom folder listing views
+   - Recent: v0.10.0-0.10.3 Phase 1 complete - Enhanced incident form with 11 new fields (injury detail, property damage, preliminary observations)
 
 2. **csc.whstheme/** - [git repository]
    - Package: `cook.whs.barceloneta` (v1.0.27)
@@ -144,14 +144,47 @@ Use `deploy.sh` script for automated build-deploy-restart cycle:
 - Consider Australian local government context and requirements
 - Prioritize workplace health and safety use cases
 
+## Current Development Status (Updated: 2025-10-15)
+
+### **Phase 1: Enhanced Incident Form - COMPLETE ✅**
+- **Version**: csc.whs v0.10.3 (Profile v17)
+- **Status**: Deployed and tested on whsportaldev
+- **Commit**: 48d1b2e "Phase 1 Complete: Enhanced Incident Form v0.10.3 (Profile v17)"
+
+**Achievements**:
+- ✅ 11 new schema fields added (injury detail, property damage, preliminary observations)
+- ✅ 5 new vocabularies with 38 body areas, 13 injury types, 9 property types
+- ✅ Anonymous form expanded from 4 to 7 sections
+- ✅ Conditional section visibility (auto-skip irrelevant sections)
+- ✅ Notifiable incident warning for WorkSafe QLD
+- ✅ Full backwards compatibility maintained
+- ✅ Documentation updated (README.md, INCIDENT_FORM_PHASE1_CHANGES.md)
+- ✅ ~1,024 lines of code added across 13 files
+
+**Date Format Decision**: Australian date format (DD/MM/YYYY) attempted but left in current state - not pursuing further for Phase 1
+
+### **Phase 2: Future Enhancements - PLANNING**
+Identified improvements for future releases:
+1. SVG body map visual component (replace 38 checkboxes with interactive diagram)
+2. Optional hiding of legacy fields from Dexterity forms
+3. Enhanced CSS for checkbox grid layout (scrollable, multi-column)
+4. Additional fieldset organization for improved UX
+
+### **Next Steps**
+- Update PROJECT_STATUS.md with Phase 1 completion
+- Update ANONYMOUS_FORM_UPDATE_SUMMARY.md with deployment confirmation
+- Consider starting Phase 2 planning or other WHS enhancements
+
 ## Quick Start Guide for New Work Sessions
 
 When starting work on the WHSPortal project, check these files in order:
 
-1. **PROJECT_STATUS.md** (project root) - Current version (v0.9.20), demo readiness, recent changes
-2. **This file** (.claude_instructions) - Development workflow and project structure
-3. **csc/README.md** - csc.whs addon features and version history
-4. **Git status in addon directories** - Check for uncommitted changes:
+1. **PROJECT_STATUS.md** (project root) - Overall project status and recent changes
+2. **This file** (.claude_instructions) - Development workflow and current status
+3. **csc/README.md** - csc.whs addon features and version history (v0.10.3)
+4. **INCIDENT_FORM_PHASE1_CHANGES.md** - Phase 1 implementation details
+5. **ANONYMOUS_FORM_UPDATE_SUMMARY.md** - Anonymous form deployment guide
+6. **Git status in addon directories** - Check for uncommitted changes:
    ```bash
    cd /home/ceo/Development/WHSPortal/csc && git status
    cd /home/ceo/Development/WHSPortal/csc.whstheme && git status

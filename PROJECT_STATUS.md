@@ -1,8 +1,8 @@
 # WHS Portal Project Status
 
-**Date:** October 13, 2025
-**Version:** 0.9.20
-**Status:** ✅ **DEMO COMPLETE - Feedback Received**
+**Date:** October 15, 2025
+**Version:** 0.10.3
+**Status:** ✅ **PHASE 1 COMPLETE - Enhanced Incident Form Deployed**
 
 ## Executive Summary
 
@@ -14,8 +14,8 @@ The Cook Shire Council WHS Portal is a comprehensive workplace health and safety
 - **Server:** whsportaldev
 - **URL:** https://whsportal.cook.qld.gov.au
 - **Plone Version:** 6.0.x (Build 6110)
-- **csc.whs Version:** 0.9.20
-- **Profile Version:** 16
+- **csc.whs Version:** 0.10.3
+- **Profile Version:** 17
 - **Deployment Method:** Systemd service with automated deployment script
 
 ### Key Features
@@ -36,7 +36,7 @@ The Cook Shire Council WHS Portal is a comprehensive workplace health and safety
 ### 1. Incident Reporting (`csc.whs.incident`)
 
 #### Features
-- ✅ MS Forms-aligned progressive form (4 sections)
+- ✅ MS Forms-aligned progressive form (7 sections) **[v0.10.0 enhanced]**
 - ✅ LDAP user search for injured person
 - ✅ Interactive GPS location picker (Leaflet.js)
 - ✅ Multi-select incident types
@@ -45,6 +45,11 @@ The Cook Shire Council WHS Portal is a comprehensive workplace health and safety
 - ✅ Mobile-optimized interface
 - ✅ Reference code generation (`INC-YYYY-NNNNN`)
 - ✅ **Reference codes used as content IDs/URLs**
+- ✅ **Enhanced injury tracking (38 body areas, 13 injury types)** **[v0.10.0 NEW]**
+- ✅ **Property damage detail tracking (9 categories)** **[v0.10.0 NEW]**
+- ✅ **Preliminary observations section** **[v0.10.0 NEW]**
+- ✅ **Conditional section visibility (auto-skip)** **[v0.10.0 NEW]**
+- ✅ **WorkSafe QLD notifiable incident warnings** **[v0.10.0 NEW]**
 
 #### URLs
 - **Report Form:** `@@report-incident`
@@ -224,7 +229,79 @@ The Cook Shire Council WHS Portal is a comprehensive workplace health and safety
 | 0.9.17 | Oct 12, 2025 | Removed all indexing methods, system stable |
 | 0.9.18 | Oct 12, 2025 | Created custom folder listing views (incidents & hazards) |
 | 0.9.19 | Oct 12, 2025 | Added view_methods to Folder type configuration |
-| 0.9.20 | Oct 12, 2025 | **CURRENT** - Added v16 upgrade step, listing views fully functional |
+| 0.9.20 | Oct 12, 2025 | Added v16 upgrade step, listing views fully functional |
+| 0.10.0 | Oct 15, 2025 | **Phase 1 Start** - Added 11 new schema fields, 5 vocabularies |
+| 0.10.1 | Oct 15, 2025 | Enhanced anonymous form with 3 new sections |
+| 0.10.2 | Oct 15, 2025 | Added conditional section visibility logic |
+| 0.10.3 | Oct 15, 2025 | **CURRENT - Phase 1 Complete** - Profile v17, all enhancements deployed |
+
+### Phase 1 Enhancements (October 15, 2025)
+
+#### Enhanced Incident Form (v0.10.0 - v0.10.3)
+**Goal:** Align anonymous incident form with complete Microsoft Forms requirements based on WHS Officer feedback.
+
+**Schema Enhancements (11 New Fields):**
+1. **Injury Detail Section (Q16-Q23):**
+   - `injury_body_areas` - 38 specific anatomical locations with left/right differentiation
+   - `injury_classifications` - 13 medical injury types (amputation, burn, fracture, etc.)
+   - `first_aid_given` - Yes/No/Uncertain with detailed tracking
+   - `first_aid_provider` - Name of person who provided first aid
+   - `first_aid_description` - Description of first aid provided
+   - `medical_treatment_sought` - Yes/No/Uncertain tracking
+   - `emergency_services_called` - Boolean flag for emergency response
+   - `medical_treatment_location` - Where treatment was provided
+
+2. **Property Damage Section (Q24-Q26):**
+   - `property_damage_types` - 9 property damage categories
+   - `property_damage_detail` - Detailed damage description
+   - `vehicle_damage_report_completed` - Yes/No tracking
+
+3. **Preliminary Observations (Q27-Q28):**
+   - `contributing_factors_identified` - Reporter-identified contributing factors
+   - `preventative_actions_suggested` - Reporter suggestions for prevention
+
+**Anonymous Form Expansion:**
+- Expanded from 4 sections to 7 sections (260+ lines added to template)
+- Implemented conditional section visibility (auto-skip irrelevant sections based on incident type)
+- Added WorkSafe QLD notifiable incident warning
+- Enhanced mobile responsiveness for new sections
+- Progress indicator updated to show "Section X of 7"
+
+**Backend Processing:**
+- Added 5 vocabulary helper methods to `anonymous.py` (99 lines)
+- Added 3 field mapping methods to `intake.py` (131 lines)
+- Enhanced JavaScript with conditional logic (137 lines)
+- Created 5 new vocabulary factories (185 lines)
+
+**Backwards Compatibility:**
+- All legacy fields preserved and functional
+- Legacy fields marked as deprecated in descriptions
+- No data migration required
+- Existing incidents fully compatible
+
+**Profile Upgrade:**
+- Created v16→v17 upgrade step with safe reindexing
+- Upgrade tested and deployed successfully
+
+**Deployment Status:**
+- ✅ v0.10.3 deployed to whsportaldev
+- ✅ Profile upgrade v16→v17 completed
+- ✅ Anonymous form tested and functional
+- ✅ All new fields indexed and searchable
+- ✅ Backwards compatibility verified
+- ✅ Documentation updated
+- ✅ Git commit completed (48d1b2e)
+
+**Code Changes:**
+- 13 files modified/created
+- ~1,024 lines of code added
+- Total contribution: Comprehensive enhancement to incident reporting capabilities
+
+**Future Work (Phase 2):**
+- SVG body map visual component (replace 38 checkboxes with interactive diagram)
+- Optional hiding of legacy fields from Dexterity forms
+- Enhanced CSS for checkbox grid layout
+- Additional fieldset organization for improved UX
 
 ### Recent Major Fixes (October 12, 2025)
 
@@ -467,25 +544,37 @@ All previously identified issues have been resolved as of v0.9.17.
 - ✅ Risk assessment ensures proper prioritization
 - ✅ Customized listing views enable quick visual scanning and prioritization
 
-## Recent Session Work (October 13, 2025)
+## Recent Session Work
 
-### Git Repository Structure Complete
+### October 15, 2025 - Phase 1 Complete
+- ✅ Implemented 11 new incident schema fields aligned with Microsoft Forms
+- ✅ Created 5 new vocabularies (38 body areas, 13 injury types, 9 property types)
+- ✅ Expanded anonymous form from 4 to 7 sections
+- ✅ Implemented conditional section visibility logic
+- ✅ Added WorkSafe QLD notifiable incident warning
+- ✅ Enhanced backend processing with 3 new field mapping methods
+- ✅ Created profile upgrade v16→v17 with safe reindexing
+- ✅ Deployed v0.10.3 to whsportaldev successfully
+- ✅ Updated all documentation (README.md, .claude_instructions, PROJECT_STATUS.md)
+- ✅ Committed all changes to git (48d1b2e - 13 files, ~1,024 lines)
+
+### October 13, 2025 - Git Repository Structure Complete
 - ✅ Created whsportal-deployment infrastructure repository
 - ✅ Committed all v0.9.20 changes to GitHub (csc.whs)
 - ✅ Updated whs-content-import-tools status (Phase 5 complete)
 - ✅ All 5 repositories now on GitHub with proper .gitignore security
 
-### Content Import Tooling Enhanced
+### October 13, 2025 - Content Import Tooling Enhanced
 - ✅ Created `check_new_files.py` tool for comparing filesystem vs Plone
 - ✅ Identified 8 new files ready for import
 - ✅ AI metadata extraction completed for all new files (100% success rate)
 - ✅ JSON batches validated and ready for import
 
-### Demo Outcome
+### October 13, 2025 - Demo Outcome
 - ✅ Demo completed successfully with WHS Officer
 - ✅ System performed well, no critical issues
 - 📋 Feedback received: Additional incident form fields required
-- 🔄 Next session: Implement requested form enhancements
+- ✅ Feedback addressed: Phase 1 complete (v0.10.0-0.10.3)
 
 ## Conclusion
 
@@ -495,15 +584,19 @@ The recent implementation of reference codes as content IDs ensures unique, pred
 
 All project code is now properly version-controlled across 5 GitHub repositories with comprehensive documentation and automated deployment tooling.
 
-**Status: DEMO COMPLETE - Enhancement Phase** ✅
+**Status: PHASE 1 COMPLETE - Ready for Production Use** ✅
 
-### Key Demonstration Features (v0.9.20)
-1. **Incident & Hazard Reporting** - Mobile-first forms with LDAP and GPS integration
-2. **Custom Folder Listings** - WHS-specific table views with color-coded severity/risk indicators
-3. **Reference Code System** - Unique URLs for cross-system tracking
-4. **Risk Assessment** - 5×5 risk matrix with automated calculations
-5. **Workflow Management** - Clear state progression with visual badges
-6. **Mobile Optimization** - Field-ready responsive design
+### Key System Features (v0.10.3)
+1. **Enhanced Incident Reporting** - 7-section form with 30+ fields, conditional visibility, WorkSafe QLD warnings
+2. **Comprehensive Injury Tracking** - 38 body areas, 13 injury classifications, first aid & medical treatment details
+3. **Property Damage Detail** - 9 damage categories with vehicle damage report tracking
+4. **Hazard Reporting** - 5×5 risk matrix with automated risk calculations
+5. **Custom Folder Listings** - WHS-specific table views with color-coded severity/risk indicators
+6. **Reference Code System** - Unique URLs for cross-system tracking (INC/HAZ-YYYY-NNNNN)
+7. **LDAP Integration** - Active Directory user search with autocomplete
+8. **GPS/Mapping** - Interactive location capture with reverse geocoding
+9. **Workflow Management** - Clear state progression with visual badges
+10. **Mobile Optimization** - Field-ready responsive design
 
 ---
 
@@ -511,7 +604,7 @@ All project code is now properly version-controlled across 5 GitHub repositories
 
 All WHS Portal code is version-controlled across 5 independent repositories:
 
-1. **csc.whs** - https://github.com/Cook-Shire-Council/csc.whs (v0.9.20)
+1. **csc.whs** - https://github.com/Cook-Shire-Council/csc.whs (v0.10.3)
 2. **cook.whs.barceloneta** - https://github.com/Cook-Shire-Council/csc.whstheme (v1.0.27)
 3. **csc.teams** - https://github.com/Cook-Shire-Council/csc.teams (v1.0.x)
 4. **whs-content-import-tools** - https://github.com/Cook-Shire-Council/whs-content-import-tools (v1.2)
@@ -519,6 +612,6 @@ All WHS Portal code is version-controlled across 5 independent repositories:
 
 ---
 
-**Last Updated:** October 13, 2025
-**Next Review:** After incident form enhancements
+**Last Updated:** October 15, 2025
+**Next Review:** Phase 2 planning or production deployment preparation
 **Maintained By:** Cook Shire Council IT Department
