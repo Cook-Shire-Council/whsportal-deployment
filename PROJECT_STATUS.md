@@ -1,8 +1,8 @@
 # WHS Portal Project Status
 
-**Date:** October 15, 2025
-**Version:** 0.10.3
-**Status:** ✅ **PHASE 1 COMPLETE - Enhanced Incident Form Deployed**
+**Date:** October 16, 2025
+**Version:** 0.10.16
+**Status:** ✅ **PHASE 2 COMPLETE - Interactive Body Map & View Enhancements Deployed**
 
 ## Executive Summary
 
@@ -14,7 +14,7 @@ The Cook Shire Council WHS Portal is a comprehensive workplace health and safety
 - **Server:** whsportaldev
 - **URL:** https://whsportal.cook.qld.gov.au
 - **Plone Version:** 6.0.x (Build 6110)
-- **csc.whs Version:** 0.10.3
+- **csc.whs Version:** 0.10.16
 - **Profile Version:** 17
 - **Deployment Method:** Systemd service with automated deployment script
 
@@ -46,10 +46,15 @@ The Cook Shire Council WHS Portal is a comprehensive workplace health and safety
 - ✅ Reference code generation (`INC-YYYY-NNNNN`)
 - ✅ **Reference codes used as content IDs/URLs**
 - ✅ **Enhanced injury tracking (38 body areas, 13 injury types)** **[v0.10.0 NEW]**
+- ✅ **Interactive SVG Body Map** - Visual body diagram with clickable regions **[v0.10.4+ NEW]**
+- ✅ **Toggle View** - Switch between body map and checkbox list **[v0.10.4+ NEW]**
+- ✅ **Enhanced Checkbox Grid Layout** - Multi-column responsive display **[v0.10.4 NEW]**
 - ✅ **Property damage detail tracking (9 categories)** **[v0.10.0 NEW]**
 - ✅ **Preliminary observations section** **[v0.10.0 NEW]**
 - ✅ **Conditional section visibility (auto-skip)** **[v0.10.0 NEW]**
 - ✅ **WorkSafe QLD notifiable incident warnings** **[v0.10.0 NEW]**
+- ✅ **Incident View Template Enhanced** - Displays all Phase 1 fields **[v0.10.15 NEW]**
+- ✅ **Legacy Fields Hidden** - Deprecated fields hidden from edit forms **[v0.10.15 NEW]**
 
 #### URLs
 - **Report Form:** `@@report-incident`
@@ -233,7 +238,11 @@ The Cook Shire Council WHS Portal is a comprehensive workplace health and safety
 | 0.10.0 | Oct 15, 2025 | **Phase 1 Start** - Added 11 new schema fields, 5 vocabularies |
 | 0.10.1 | Oct 15, 2025 | Enhanced anonymous form with 3 new sections |
 | 0.10.2 | Oct 15, 2025 | Added conditional section visibility logic |
-| 0.10.3 | Oct 15, 2025 | **CURRENT - Phase 1 Complete** - Profile v17, all enhancements deployed |
+| 0.10.3 | Oct 15, 2025 | **Phase 1 Complete** - Profile v17, all enhancements deployed |
+| 0.10.4 | Oct 15, 2025 | **Phase 2.1** - Enhanced CSS checkbox grid layout (2-4 columns) |
+| 0.10.5-0.10.14 | Oct 15-16, 2025 | **Phase 2.2** - SVG body map development and refinement |
+| 0.10.15 | Oct 16, 2025 | **Phase 2.3** - Incident view updated, legacy fields hidden |
+| 0.10.16 | Oct 16, 2025 | **CURRENT - Phase 2 Complete** - Additional people section improvements |
 
 ### Phase 1 Enhancements (October 15, 2025)
 
@@ -297,11 +306,80 @@ The Cook Shire Council WHS Portal is a comprehensive workplace health and safety
 - ~1,024 lines of code added
 - Total contribution: Comprehensive enhancement to incident reporting capabilities
 
-**Future Work (Phase 2):**
-- SVG body map visual component (replace 38 checkboxes with interactive diagram)
-- Optional hiding of legacy fields from Dexterity forms
-- Enhanced CSS for checkbox grid layout
-- Additional fieldset organization for improved UX
+### Phase 2 Enhancements (October 15-16, 2025)
+
+#### Interactive Body Map & View Enhancements (v0.10.4 - v0.10.16)
+**Goal:** Improve user experience with visual body selection, enhanced layouts, and comprehensive incident viewing.
+
+**Feature 1: Enhanced CSS Checkbox Grid Layout (v0.10.4)**
+- Multi-column CSS grid layout (2-4 columns based on screen size)
+- 50% reduction in vertical space for 38 body area checkboxes
+- Responsive breakpoints for mobile (2 columns), tablet (3 columns), desktop (4 columns)
+- Visual enhancements: hover effects, checked state highlighting, custom scrollbars
+- Accessibility support: keyboard navigation, high contrast mode, reduced motion support
+- 207 lines of CSS added to `report_incident_styles.css`
+
+**Feature 2: Interactive SVG Body Map (v0.10.5 - v0.10.14)**
+- **SVG Implementation**: 38 clickable body regions with front and back body views
+- **Toggle Functionality**: Seamless switch between interactive body map and checkbox list
+- **Bidirectional Sync**: Selections on SVG update checkboxes, checkbox changes update SVG
+- **Visual Feedback**: Hover effects (red), selection states (green), smooth transitions
+- **Selection Counter**: Real-time display of number of body areas selected
+- **Mobile Optimization**: Touch-friendly regions, responsive scaling, tested on mobile devices
+- **Accessibility**: Full keyboard navigation, ARIA attributes, screen reader support
+- **JavaScript**: 294 lines of vanilla JavaScript (`body_map.js`)
+- **CSS**: 276 lines of responsive styling (`body_map.css`)
+- **SVG**: Vector body diagram with data-value attributes (`body_diagram.svg`)
+
+**Feature 3: Legacy Fields Hidden (v0.10.15)**
+- Added `directives.omitted()` to 5 deprecated fields in interfaces.py
+- Fields: `injury_type`, `treatment`, `body_part`, `equipment_plant`, `property_damage`
+- Fields remain in schema for backwards compatibility but hidden from edit forms
+- No data migration required, existing incidents fully compatible
+
+**Feature 4: Incident View Template Enhancement (v0.10.15)**
+- Updated `incident.pt` template to display all Phase 1 fields (589 lines)
+- **Section 3 Expanded**: Replaced legacy injury fields with comprehensive Phase 1 injury details
+  - 38 body areas with human-readable labels
+  - 13 injury classifications
+  - First aid tracking (provider, description, yes/no/uncertain)
+  - Medical treatment tracking (location, emergency services called)
+- **Section 4 Added**: Property & Plant Damage section
+  - 9 property damage categories
+  - Vehicle damage report completion tracking
+  - Detailed property damage description
+- **Section 4B Added**: Preliminary Observations section
+  - Contributing factors identified by reporter
+  - Preventative actions suggested by reporter
+- Conditional section visibility (only show sections with data)
+
+**Feature 5: Additional People Section Improvements (v0.10.16)**
+- **Section Renamed**: "People Involved" → "Additional People Involved"
+- **Field Renamed**: "Persons Involved" → "Additional Persons Involved"
+- **Conditional Section**: Only displays if additional people or witnesses are recorded
+- **Individual Conditionals**: Each field only shows if populated
+- **Clarified Purpose**: Distinguishes from main injured person in Section 1B
+
+**Deployment Status:**
+- ✅ v0.10.16 deployed to whsportaldev
+- ✅ All Phase 2 features tested and functional
+- ✅ Mobile and desktop compatibility verified
+- ✅ WHS Officer feedback incorporated
+- ✅ Backwards compatibility maintained
+- ✅ Documentation updated
+
+**Code Changes:**
+- 10+ files modified/created
+- ~870 lines of code added (JavaScript, CSS, SVG, Python, TAL)
+- Total contribution: Comprehensive UX enhancement with visual body selection interface
+
+**User Benefits:**
+- **Reduced Cognitive Load**: Visual body selection vs reading 38 text labels
+- **Improved Accuracy**: Clear anatomical positioning reduces selection errors
+- **Enhanced Mobile Experience**: Large touch targets vs small checkboxes
+- **Flexibility**: Toggle between visual and list views based on preference
+- **Complete Information**: Incident view template shows all captured data
+- **Cleaner Edit Forms**: Deprecated fields hidden, reducing form clutter
 
 ### Recent Major Fixes (October 12, 2025)
 
@@ -546,6 +624,19 @@ All previously identified issues have been resolved as of v0.9.17.
 
 ## Recent Session Work
 
+### October 16, 2025 - Phase 2 Complete
+- ✅ Completed SVG body map implementation (v0.10.5-v0.10.14)
+- ✅ 38 clickable body regions with bidirectional checkbox sync
+- ✅ Toggle functionality between body map and list views
+- ✅ Full accessibility: keyboard navigation, ARIA attributes, screen reader support
+- ✅ Mobile optimization: touch-friendly, responsive scaling
+- ✅ Enhanced incident view template with all Phase 1 fields (v0.10.15)
+- ✅ Hidden legacy fields from edit forms (v0.10.15)
+- ✅ Improved "Additional People Involved" section (v0.10.16)
+- ✅ Updated documentation (README.md, PROJECT_STATUS.md, .claude_instructions)
+- ✅ All changes tested and verified by WHS Officer
+- ✅ System ready for stakeholder feedback phase
+
 ### October 15, 2025 - Phase 1 Complete
 - ✅ Implemented 11 new incident schema fields aligned with Microsoft Forms
 - ✅ Created 5 new vocabularies (38 body areas, 13 injury types, 9 property types)
@@ -578,25 +669,29 @@ All previously identified issues have been resolved as of v0.9.17.
 
 ## Conclusion
 
-The WHS Portal is functionally complete and has been successfully demonstrated. The system provides a modern, mobile-first interface for workplace health and safety reporting with comprehensive features including LDAP integration, GPS mapping, risk assessment, workflow management, and custom WHS-optimized folder listing views.
+The WHS Portal is functionally complete and has been successfully demonstrated. The system provides a modern, mobile-first interface for workplace health and safety reporting with comprehensive features including LDAP integration, GPS mapping, risk assessment, workflow management, custom WHS-optimized folder listing views, and an innovative interactive body map for injury selection.
 
-The recent implementation of reference codes as content IDs ensures unique, predictable URLs that facilitate cross-system integration with Request Tracker and Content Manager systems. Custom folder listing views provide WHS Officers with at-a-glance visibility into incident severity and hazard risk levels, enabling quick prioritization and response.
+The recent Phase 2 enhancements significantly improve user experience with visual body selection, reducing cognitive load and improving data accuracy. The toggle functionality between body map and checkbox list provides flexibility for different user preferences and use cases. The enhanced incident view template ensures all captured data is displayed clearly, while hidden legacy fields streamline the edit interface.
 
-All project code is now properly version-controlled across 5 GitHub repositories with comprehensive documentation and automated deployment tooling.
+The system maintains full backwards compatibility while incorporating modern UX patterns. Reference codes as content IDs ensure unique, predictable URLs that facilitate cross-system integration with Request Tracker and Content Manager systems.
 
-**Status: PHASE 1 COMPLETE - Ready for Production Use** ✅
+All project code is properly version-controlled across 5 GitHub repositories with comprehensive documentation and automated deployment tooling.
 
-### Key System Features (v0.10.3)
+**Status: PHASE 2 COMPLETE - Ready for Stakeholder Feedback** ✅
+
+### Key System Features (v0.10.16)
 1. **Enhanced Incident Reporting** - 7-section form with 30+ fields, conditional visibility, WorkSafe QLD warnings
-2. **Comprehensive Injury Tracking** - 38 body areas, 13 injury classifications, first aid & medical treatment details
-3. **Property Damage Detail** - 9 damage categories with vehicle damage report tracking
-4. **Hazard Reporting** - 5×5 risk matrix with automated risk calculations
-5. **Custom Folder Listings** - WHS-specific table views with color-coded severity/risk indicators
-6. **Reference Code System** - Unique URLs for cross-system tracking (INC/HAZ-YYYY-NNNNN)
-7. **LDAP Integration** - Active Directory user search with autocomplete
-8. **GPS/Mapping** - Interactive location capture with reverse geocoding
-9. **Workflow Management** - Clear state progression with visual badges
-10. **Mobile Optimization** - Field-ready responsive design
+2. **Interactive SVG Body Map** - Visual body diagram with 38 clickable regions and toggle view
+3. **Comprehensive Injury Tracking** - 38 body areas, 13 injury classifications, first aid & medical treatment details
+4. **Enhanced Incident View** - Complete display of all Phase 1 & 2 fields with conditional sections
+5. **Property Damage Detail** - 9 damage categories with vehicle damage report tracking
+6. **Hazard Reporting** - 5×5 risk matrix with automated risk calculations
+7. **Custom Folder Listings** - WHS-specific table views with color-coded severity/risk indicators
+8. **Reference Code System** - Unique URLs for cross-system tracking (INC/HAZ-YYYY-NNNNN)
+9. **LDAP Integration** - Active Directory user search with autocomplete
+10. **GPS/Mapping** - Interactive location capture with reverse geocoding
+11. **Workflow Management** - Clear state progression with visual badges
+12. **Mobile Optimization** - Field-ready responsive design with touch-friendly body map
 
 ---
 
@@ -604,7 +699,7 @@ All project code is now properly version-controlled across 5 GitHub repositories
 
 All WHS Portal code is version-controlled across 5 independent repositories:
 
-1. **csc.whs** - https://github.com/Cook-Shire-Council/csc.whs (v0.10.3)
+1. **csc.whs** - https://github.com/Cook-Shire-Council/csc.whs (v0.10.16)
 2. **cook.whs.barceloneta** - https://github.com/Cook-Shire-Council/csc.whstheme (v1.0.27)
 3. **csc.teams** - https://github.com/Cook-Shire-Council/csc.teams (v1.0.x)
 4. **whs-content-import-tools** - https://github.com/Cook-Shire-Council/whs-content-import-tools (v1.2)
@@ -612,6 +707,6 @@ All WHS Portal code is version-controlled across 5 independent repositories:
 
 ---
 
-**Last Updated:** October 15, 2025
-**Next Review:** Phase 2 planning or production deployment preparation
+**Last Updated:** October 16, 2025
+**Next Review:** Stakeholder feedback review and Phase 3 planning
 **Maintained By:** Cook Shire Council IT Department

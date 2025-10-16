@@ -64,11 +64,11 @@ The WHSPortal project consists of multiple independent repositories housed in a 
 ### Active Repositories (each with own git)
 
 1. **csc/** - [git repository]
-   - Package: `csc.whs` (currently v0.10.4, profile v17)
+   - Package: `csc.whs` (currently v0.10.16, profile v17)
    - Purpose: Core WHS incident & hazard reporting and management
-   - Features: Incident/hazard content types, workflows, LDAP integration, GPS mapping, 5×5 risk matrix, email notifications, custom folder listings
+   - Features: Incident/hazard content types, workflows, LDAP integration, GPS mapping, 5×5 risk matrix, email notifications, custom folder listings, interactive SVG body map
    - Built from: `pyproject.toml`
-   - Recent: v0.10.4 Phase 2.1 - Enhanced checkbox grid layout for improved scannability
+   - Recent: v0.10.16 Phase 2 Complete - Interactive body map, enhanced incident view, legacy fields hidden
 
 2. **csc.whstheme/** - [git repository]
    - Package: `cook.whs.barceloneta` (v1.0.27)
@@ -206,26 +206,54 @@ gh repo view
 - Consider Australian local government context and requirements
 - Prioritize workplace health and safety use cases
 
-## Current Development Status (Updated: 2025-10-15)
+## Current Development Status (Updated: 2025-10-16)
 
-### **Phase 2.1: Enhanced Checkbox Grid Layout - COMPLETE ✅**
-- **Version**: csc.whs v0.10.4 (Profile v17)
-- **Status**: Deployed, tested, and approved on whsportaldev
-- **Commit**: c7420af "Phase 2.1: Enhanced Checkbox Grid Layout v0.10.4"
+### **Phase 2: Interactive Body Map & View Enhancements - COMPLETE ✅**
+- **Version**: csc.whs v0.10.16 (Profile v17)
+- **Status**: Deployed, tested, and ready for stakeholder feedback
+- **Latest Commit**: v0.10.16 "Phase 2 Complete: Additional People Section Improvements"
 
-**Achievements**:
-- ✅ Multi-column CSS grid layout (2-4 columns based on screen size)
-- ✅ 50% reduction in vertical space for 38 body area checkboxes
-- ✅ Responsive breakpoints for mobile/tablet/desktop
-- ✅ Visual enhancements (hover effects, checked state highlighting)
-- ✅ Custom scrollbar styling
-- ✅ Full accessibility support (keyboard nav, high contrast, reduced motion)
-- ✅ Tested and approved on mobile and desktop devices
-- ✅ 207 lines of CSS added
+**Phase 2 Achievements (v0.10.4 - v0.10.16)**:
+- ✅ **Enhanced CSS Checkbox Grid Layout** (v0.10.4)
+  - Multi-column responsive display (2-4 columns)
+  - 50% reduction in vertical space for 38 body areas
+  - Full accessibility support
+  - 207 lines of CSS added
+
+- ✅ **Interactive SVG Body Map** (v0.10.5-v0.10.14)
+  - 38 clickable body regions with front/back views
+  - Toggle functionality between body map and checkbox list
+  - Bidirectional synchronization (SVG ↔ checkboxes)
+  - Selection counter with real-time updates
+  - Full keyboard navigation and ARIA support
+  - Mobile-optimized touch targets
+  - 294 lines of JavaScript + 276 lines of CSS + SVG diagram
+
+- ✅ **Legacy Fields Hidden** (v0.10.15)
+  - 5 deprecated fields hidden from edit forms using `directives.omitted()`
+  - Full backwards compatibility maintained
+
+- ✅ **Incident View Template Enhanced** (v0.10.15)
+  - Complete display of all Phase 1 fields
+  - Section 3 expanded with injury details
+  - Section 4 added for property damage
+  - Section 4B added for preliminary observations
+  - Conditional section visibility
+
+- ✅ **Additional People Section Improvements** (v0.10.16)
+  - Section renamed for clarity
+  - Conditional display (only show if data exists)
+  - Individual field conditionals
+  - WHS Officer verified and approved
+
+**Code Contribution**:
+- ~1,894 lines of code added across both phases
+- 20+ files modified/created
+- Full documentation updated
 
 ### **Phase 1: Enhanced Incident Form - COMPLETE ✅**
 - **Version**: csc.whs v0.10.3 (Profile v17)
-- **Status**: Deployed and tested on whsportaldev
+- **Status**: Deployed and integrated with Phase 2
 - **Commit**: 48d1b2e "Phase 1 Complete: Enhanced Incident Form v0.10.3 (Profile v17)"
 
 **Achievements**:
@@ -237,32 +265,23 @@ gh repo view
 - ✅ Full backwards compatibility maintained
 - ✅ ~1,024 lines of code added across 13 files
 
-### **Phase 2: Remaining Enhancements - PLANNING**
-**Next Decision Point**: Evaluate if SVG body map is still needed with improved grid layout
-
-**Planned Features**:
-1. **SVG body map** (DEFERRED - pending evaluation of grid layout sufficiency)
-2. **Hide legacy fields** from Dexterity forms (LOW EFFORT - ready to implement)
-3. **Conditional visibility enhancements** (OPTIONAL)
-4. **Additional fieldset organization** (OPTIONAL)
-
-**Documentation**: See `Phase_2_csc.whs_form_update_implementation_plan.md` for complete plan
-
-### **Next Steps**
-- Gather WHS Office feedback on grid layout
-- Decide if SVG body map is still needed
-- If grid is sufficient, proceed to hide legacy fields
-- Update PROJECT_STATUS.md with Phase 2.1 completion
+### **Next Steps - Stakeholder Feedback Phase**
+- Gather feedback from WHS Officer on Phase 2 enhancements
+- Gather feedback from ELT and other stakeholders
+- Document feedback and prioritize Phase 3 features (if needed)
+- Plan production deployment timeline
+- Consider Phase 3 enhancements based on stakeholder input
 
 ## Quick Start Guide for New Work Sessions
 
 When starting work on the WHSPortal project, check these files in order:
 
-1. **PROJECT_STATUS.md** (project root) - Overall project status and recent changes
+1. **PROJECT_STATUS.md** (project root) - Overall project status and recent changes (v0.10.16)
 2. **This file** (.claude_instructions) - Development workflow and current status
-3. **csc/README.md** - csc.whs addon features and version history (v0.10.3)
-4. **INCIDENT_FORM_PHASE1_CHANGES.md** - Phase 1 implementation details
-5. **ANONYMOUS_FORM_UPDATE_SUMMARY.md** - Anonymous form deployment guide
+3. **csc/README.md** - csc.whs addon features and version history (v0.10.16)
+4. **Phase_2_csc.whs_form_update_implementation_plan.md** - Phase 2 implementation plan and tracking
+5. **INCIDENT_FORM_PHASE1_CHANGES.md** - Phase 1 implementation details
+6. **ANONYMOUS_FORM_UPDATE_SUMMARY.md** - Anonymous form deployment guide
 6. **Git status in addon directories** - Check for uncommitted changes:
    ```bash
    cd /home/ceo/Development/WHSPortal/csc && git status
