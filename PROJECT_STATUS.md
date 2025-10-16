@@ -1,8 +1,8 @@
 # WHS Portal Project Status
 
 **Date:** October 16, 2025
-**Version:** 0.10.16
-**Status:** ✅ **PHASE 2 COMPLETE - Interactive Body Map & View Enhancements Deployed**
+**Version:** 0.10.17
+**Status:** ✅ **PHASE 1 SECURITY COMPLETE - Anonymous Form Protection Implemented**
 
 ## Executive Summary
 
@@ -14,7 +14,7 @@ The Cook Shire Council WHS Portal is a comprehensive workplace health and safety
 - **Server:** whsportaldev
 - **URL:** https://whsportal.cook.qld.gov.au
 - **Plone Version:** 6.0.x (Build 6110)
-- **csc.whs Version:** 0.10.16
+- **csc.whs Version:** 0.10.17
 - **Profile Version:** 17
 - **Deployment Method:** Systemd service with automated deployment script
 
@@ -242,7 +242,8 @@ The Cook Shire Council WHS Portal is a comprehensive workplace health and safety
 | 0.10.4 | Oct 15, 2025 | **Phase 2.1** - Enhanced CSS checkbox grid layout (2-4 columns) |
 | 0.10.5-0.10.14 | Oct 15-16, 2025 | **Phase 2.2** - SVG body map development and refinement |
 | 0.10.15 | Oct 16, 2025 | **Phase 2.3** - Incident view updated, legacy fields hidden |
-| 0.10.16 | Oct 16, 2025 | **CURRENT - Phase 2 Complete** - Additional people section improvements |
+| 0.10.16 | Oct 16, 2025 | **Phase 2 Complete** - Additional people section improvements |
+| 0.10.17 | Oct 16, 2025 | **CURRENT - Phase 1 Security** - Anonymous form protection (honeypot, rate limiting, duplicate detection) |
 
 ### Phase 1 Enhancements (October 15, 2025)
 
@@ -622,9 +623,86 @@ All previously identified issues have been resolved as of v0.9.17.
 - ✅ Risk assessment ensures proper prioritization
 - ✅ Customized listing views enable quick visual scanning and prioritization
 
+### Phase 1 Security Enhancements (October 16, 2025)
+
+#### Anonymous Form Protection (v0.10.17)
+**Goal:** Protect anonymous incident and hazard forms from abuse while maintaining zero friction for legitimate users.
+
+**Security Implementation:**
+1. **Honeypot Fields (Bot Detection)**
+   - 3 hidden form fields that legitimate users can't see but bots will fill
+   - Fields: `contact_number`, `website`, `accept_terms`
+   - Silent rejection - bots receive fake success response without revealing detection
+   - Added to both `report_incident.pt` and `report_hazard.pt` templates
+
+2. **IP-Based Rate Limiting**
+   - Conservative limits: Incidents (3/hour, 10/day, 30/month), Hazards (5/hour, 15/day, 50/month)
+   - ZODB persistent storage (no external database required)
+   - Proxy-aware IP detection (X-Forwarded-For header support)
+   - User-friendly error pages with WHS Office contact information
+   - Admin override capability for false positives
+
+3. **Duplicate Detection**
+   - SHA256 content fingerprinting of key form fields
+   - 60-minute detection window
+   - Prevents accidental duplicate submissions
+   - Friendly message suggesting to wait or contact WHS Office
+
+**Design Principles:**
+- **Fail-Open Approach:** If security checks error, allow submission (safety-critical system priority)
+- **Anonymous-Only:** Authenticated users bypass all security checks
+- **Silent Bot Detection:** Don't reveal detection to attackers
+- **Zero Friction:** No CAPTCHA or additional steps for legitimate users
+- **User-Friendly Errors:** Clear instructions with WHS Office contact info
+
+**Files Modified:**
+- **New File:** `src/csc/whs/security.py` (428 lines) - Core security module
+- **Modified:** `src/csc/whs/browser/intake.py` - Added security integration
+- **Modified:** `src/csc/whs/browser/hazard_intake.py` - Added security integration
+- **Modified:** `src/csc/whs/browser/templates/report_incident.pt` - Added honeypot fields
+- **Modified:** `src/csc/whs/browser/templates/report_hazard.pt` - Added honeypot fields
+- **Version:** `pyproject.toml` updated from 0.10.16 to 0.10.17
+
+**Deployment Status:**
+- ✅ Security module created with comprehensive functionality
+- ✅ Honeypot fields integrated into both forms
+- ✅ Rate limiting implemented with ZODB persistence
+- ✅ Duplicate detection functional
+- ✅ Helper response methods created for all error scenarios
+- ⏳ Ready for testing and deployment
+- ✅ Implementation documentation created (`ANONYMOUS_FORM_SECURITY_PHASE1_IMPLEMENTATION.md`)
+
+**Future Enhancements (Phase 2+):**
+- Admin dashboard for monitoring rate limits and security events
+- Session-based tracking for shared IP addresses
+- Enhanced duplicate detection with fuzzy matching
+- Optional math CAPTCHA for high-risk scenarios (if abuse continues)
+- Browser fingerprinting for advanced bot detection
+
+**Code Changes:**
+- 5 files modified
+- 1 new security module (428 lines)
+- ~600+ lines of security integration code
+- Total contribution: Comprehensive zero-friction security layer for anonymous forms
+
 ## Recent Session Work
 
-### October 16, 2025 - Phase 2 Complete
+### October 16, 2025 - Phase 1 Security Implementation Complete
+- ✅ Created comprehensive security module (`security.py` - 428 lines)
+- ✅ Implemented IP-based rate limiting with ZODB persistence
+- ✅ Added honeypot bot detection to incident and hazard forms
+- ✅ Implemented duplicate submission detection (SHA256 fingerprinting)
+- ✅ Integrated security checks into intake.py and hazard_intake.py
+- ✅ Created user-friendly error response pages for all security scenarios
+- ✅ Maintained zero-friction user experience (no CAPTCHA required)
+- ✅ Anonymous-only security (authenticated users bypass checks)
+- ✅ Fail-open approach for safety-critical system reliability
+- ✅ Updated version to 0.10.17
+- ✅ Created implementation documentation (`ANONYMOUS_FORM_SECURITY_PHASE1_IMPLEMENTATION.md`)
+- ✅ Updated PROJECT_STATUS.md with security enhancements
+- ⏳ Ready for testing and deployment
+
+### October 16, 2025 - Phase 2 Complete (Earlier Session)
 - ✅ Completed SVG body map implementation (v0.10.5-v0.10.14)
 - ✅ 38 clickable body regions with bidirectional checkbox sync
 - ✅ Toggle functionality between body map and list views
