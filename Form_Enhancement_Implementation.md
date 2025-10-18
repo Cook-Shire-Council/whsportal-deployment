@@ -1838,3 +1838,652 @@ gh repo sync
 **Document Created:** October 18, 2025
 **Status:** Ready to implement
 **Next Action:** Begin Super-Phase 1 - Foundation (Schema & Vocabularies)
+
+---
+
+## Additional Enhancement Requests (Post-Phase A Testing)
+
+During Phase A (Division → Department) testing, three additional UX enhancement requests were identified:
+
+### Enhancement Request #6: Department Dropdown Alphabetical Sorting
+
+**Issue Identified:**
+Department dropdown displays in random order, making it difficult to visually locate departments when selecting manually.
+
+**Current Behavior:**
+- Department vocabulary returns terms in definition order (not alphabetical)
+- 26 departments displayed without consistent ordering
+- Users must scan entire list to find their department
+
+**Requested Changes:**
+1. Sort department dropdown alphabetically by title
+2. Add label hint: "You can start typing to automatically select the department"
+3. Apply to ALL usages of Department field:
+   - Incident form (authenticated) - report-incident.pt
+   - Incident form (anonymous) - anonymous_form.pt
+   - Hazard form (authenticated) - report-hazard.pt
+   - Hazard form (anonymous) - whs-hazard-intake
+
+**Why This Matters:**
+- Not noticeable in authenticated incident form (LDAP auto-populates department)
+- Very noticeable in:
+  - Anonymous incident reports (no LDAP)
+  - All hazard reports (no LDAP auto-population)
+  - Manual corrections/overrides
+
+**Implementation Approach:**
+
+**Option A: Sort in Vocabulary Factory (Recommended)**
+
+**File:** `csc/src/csc/whs/vocabularies.py`
+
+Modify `DepartmentVocabularyFactory`:
+
+```python
+@provider(IVocabularyFactory)
+def DepartmentVocabularyFactory(context):
+    """Department vocabulary for Cook Shire Council
+
+    Returns departments sorted alphabetically by title for better UX.
+    """
+    terms = [
+        SimpleTerm(value='ict', title='Information and Communications Technology'),
+        SimpleTerm(value='water-wastewater', title='Water & Wastewater'),
+        # ... all 26 departments ...
+    ]
+
+    # Sort terms alphabetically by title
+    sorted_terms = sorted(terms, key=lambda term: term.title)
+
+    return SimpleVocabulary(sorted_terms)
+```
+
+**Add typing hint to labels:**
+
+Update all templates that render department field:
+
+```html
+<label for="form-widgets-department">
+    <strong>Q5:</strong> Department of person injured <span class="required">*</span>
+</label>
+<select id="form-widgets-department" name="department" required>
+    <option value="">-- Select department (or start typing) --</option>
+    <!-- Department options here -->
+</select>
+<p class="field-description">
+    Select the department of the person injured. You can start typing to automatically select.
+</p>
+```
+
+**Files to Modify:**
+- `csc/src/csc/whs/vocabularies.py` - Sort DepartmentVocabulary terms
+- `csc/src/csc/whs/browser/templates/report_incident.pt` - Update Q5 label hint
+- `csc/src/csc/whs/browser/templates/anonymous_form.pt` - Update Q5 label hint
+- `csc/src/csc/whs/browser/templates/report_hazard.pt` - Update department label hint
+- `csc/src/csc/whs/browser/templates/whs-hazard-intake` (if exists) - Update label hint
+
+**Testing:**
+- [ ] Department dropdown displays in alphabetical order in all forms
+- [ ] Typing in dropdown auto-selects matching department
+- [ ] Label hints display correctly
+- [ ] LDAP auto-population still works in authenticated incident form
+- [ ] Manual selection works in all other forms
+
+**Priority:** High (UX improvement affecting all users)
+**Estimated Effort:** 0.5-1 hour
+
+---
+
+### Enhancement Request #7: Add "Return to Home" Link to Hazard Form
+
+**Issue Identified:**
+After submitting a hazard report, there is no "Return to home page" link displayed. This feature exists in the incident report form but is missing from the hazard form, creating an inconsistent user experience.
+
+**Current Behavior:**
+- Incident form submission shows success message with "Return to home page" link
+- Hazard form submission shows success message WITHOUT return link
+- Users must use browser back button or manually navigate
+
+**Requested Change:**
+Add "Return to home page" link to hazard form submission success page, matching the pattern used in incident form.
+
+**Implementation Approach:**
+
+**Step 1: Review Incident Form Pattern**
+
+Find where incident form displays "Return to home page" link after submission.
+
+**Likely locations:**
+- `csc/src/csc/whs/browser/templates/anonymous_form.pt` - Success message section
+- `csc/src/csc/whs/browser/anonymous.py` - Response HTML generation
+- `csc/src/csc/whs/browser/intake.py` - Success response
+
+**Step 2: Apply Same Pattern to Hazard Forms**
+
+**Files to check/modify:**
+- `csc/src/csc/whs/browser/report_hazard.py` - Hazard form processing (authenticated)
+- `csc/src/csc/whs/browser/hazard_intake.py` - Hazard intake processing (anonymous)
+- Success response templates for hazard submissions
+
+**Expected Code Pattern (from incident form):**
+
+```html
+<div class="success-message">
+    <h2>Hazard Report Submitted Successfully</h2>
+    <p>Your hazard report has been recorded with ID: <strong tal:content="report_id">HR-123</strong></p>
+    <p>The WHS team has been notified and will review your report.</p>
+
+    <!-- Add this link matching incident form -->
+    <p>
+        <a href="/" class="button">Return to home page</a>
+    </p>
+</div>
+```
+
+**Files to Modify:**
+- Hazard form success response templates (locate during implementation)
+- Hazard form processing classes (add return link to success response)
+
+**Testing:**
+- [ ] Submit hazard report (authenticated) → see "Return to home page" link
+- [ ] Submit hazard report (anonymous) → see "Return to home page" link
+- [ ] Click link → navigates to home page
+- [ ] Visual style matches incident form link
+- [ ] Link appears in same position as incident form
+
+**Priority:** Medium (UX consistency improvement)
+**Estimated Effort:** 0.5-1 hour
+
+---
+
+### Enhancement Request #8: Improve Mandatory Field Validation Visual Feedback
+
+**Issue Identified:**
+When submitting a form with missing required fields, the current validation provides minimal feedback:
+- Generic browser alert: "Please fill out this field"
+- No visual indication of which section contains the missing field
+- No highlighting of the specific missing question
+- Users must manually search through collapsed sections to find missing fields
+
+**Current Behavior:**
+1. User submits form with missing required field(s)
+2. Browser shows default alert (varies by browser)
+3. Page may scroll to first missing field (browser-dependent)
+4. No visual cues on section headers
+5. No highlighting on field labels or questions
+6. No persistent error message at top of form
+
+**User's Suggested Approach:**
+- Make the section header containing missed field(s) red
+- Make the question label for missed field(s) red
+- Open for better implementation suggestions
+
+**Recommended Implementation Approach:**
+
+**Option: Enhanced Client-Side Validation with Visual Feedback**
+
+This approach provides comprehensive, professional validation feedback:
+
+**JavaScript Validation (client-side):**
+
+**File:** `csc/src/csc/whs/browser/static/incident_form.js`
+
+```javascript
+/**
+ * Enhanced form validation with visual feedback
+ * Shows clear indicators for missing required fields
+ */
+function validateFormWithFeedback(formElement) {
+    // Clear any previous validation feedback
+    clearValidationFeedback();
+
+    let errors = [];
+    let firstErrorField = null;
+
+    // Find all required fields
+    const requiredFields = formElement.querySelectorAll('[required]');
+
+    requiredFields.forEach(field => {
+        const fieldValue = field.value.trim();
+        const isEmpty = !fieldValue || fieldValue === '';
+
+        if (isEmpty) {
+            // Track first error for scrolling
+            if (!firstErrorField) {
+                firstErrorField = field;
+            }
+
+            // Get field info
+            const label = getLabelForField(field);
+            const section = getSectionForField(field);
+            const questionNumber = getQuestionNumber(label);
+
+            // Add visual feedback
+            markFieldAsError(field, label, section);
+
+            // Add to error list
+            errors.push({
+                questionNumber: questionNumber,
+                fieldName: label ? label.textContent.trim() : field.name,
+                section: section ? section.querySelector('.section-header').textContent.trim() : 'Unknown Section'
+            });
+        }
+    });
+
+    // If errors found, show summary and prevent submission
+    if (errors.length > 0) {
+        showValidationSummary(errors);
+        scrollToFirstError(firstErrorField);
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Mark field, label, and section with error styling
+ */
+function markFieldAsError(field, label, section) {
+    // Highlight the field itself
+    field.classList.add('field-error');
+    field.setAttribute('aria-invalid', 'true');
+
+    // Highlight the label
+    if (label) {
+        label.classList.add('label-error');
+
+        // Add inline error message
+        if (!label.querySelector('.error-indicator')) {
+            const errorIndicator = document.createElement('span');
+            errorIndicator.className = 'error-indicator';
+            errorIndicator.textContent = ' (Required)';
+            errorIndicator.setAttribute('role', 'alert');
+            label.appendChild(errorIndicator);
+        }
+    }
+
+    // Highlight the section header
+    if (section) {
+        const sectionHeader = section.querySelector('.section-header');
+        if (sectionHeader && !sectionHeader.classList.contains('section-error')) {
+            sectionHeader.classList.add('section-error');
+
+            // Add error badge to section
+            const errorBadge = document.createElement('span');
+            errorBadge.className = 'section-error-badge';
+            errorBadge.textContent = '⚠';
+            errorBadge.setAttribute('role', 'alert');
+            errorBadge.setAttribute('aria-label', 'This section has missing required fields');
+            sectionHeader.insertBefore(errorBadge, sectionHeader.firstChild);
+        }
+
+        // Expand section if collapsed
+        expandSection(section);
+    }
+}
+
+/**
+ * Show validation summary at top of form
+ */
+function showValidationSummary(errors) {
+    const form = document.querySelector('form.incident-form');
+    if (!form) return;
+
+    // Create summary container
+    const summary = document.createElement('div');
+    summary.className = 'validation-summary';
+    summary.setAttribute('role', 'alert');
+    summary.setAttribute('aria-live', 'assertive');
+
+    // Add heading
+    const heading = document.createElement('h3');
+    heading.textContent = `Please complete the following ${errors.length} required field${errors.length > 1 ? 's' : ''}:`;
+    summary.appendChild(heading);
+
+    // Add error list
+    const errorList = document.createElement('ul');
+    errors.forEach(error => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `<strong>${error.questionNumber || error.fieldName}</strong> in ${error.section}`;
+
+        // Make clickable to jump to field
+        listItem.style.cursor = 'pointer';
+        listItem.addEventListener('click', () => {
+            const field = document.querySelector(`[name="${error.fieldName}"]`);
+            if (field) {
+                field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                field.focus();
+            }
+        });
+
+        errorList.appendChild(listItem);
+    });
+    summary.appendChild(errorList);
+
+    // Insert at top of form
+    form.insertBefore(summary, form.firstChild);
+
+    // Scroll to summary
+    summary.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/**
+ * Clear all validation feedback
+ */
+function clearValidationFeedback() {
+    // Remove error summary
+    document.querySelectorAll('.validation-summary').forEach(el => el.remove());
+
+    // Remove field error styling
+    document.querySelectorAll('.field-error').forEach(el => {
+        el.classList.remove('field-error');
+        el.removeAttribute('aria-invalid');
+    });
+
+    // Remove label error styling
+    document.querySelectorAll('.label-error').forEach(el => {
+        el.classList.remove('label-error');
+    });
+
+    // Remove error indicators
+    document.querySelectorAll('.error-indicator').forEach(el => el.remove());
+
+    // Remove section error styling
+    document.querySelectorAll('.section-error').forEach(el => {
+        el.classList.remove('section-error');
+    });
+
+    // Remove section error badges
+    document.querySelectorAll('.section-error-badge').forEach(el => el.remove());
+}
+
+// Helper functions
+function getLabelForField(field) {
+    return document.querySelector(`label[for="${field.id}"]`) || field.closest('.field')?.querySelector('label');
+}
+
+function getSectionForField(field) {
+    return field.closest('.form-section');
+}
+
+function getQuestionNumber(label) {
+    if (!label) return '';
+    const match = label.textContent.match(/Q\d+/);
+    return match ? match[0] : '';
+}
+
+function scrollToFirstError(field) {
+    if (field) {
+        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => field.focus(), 500);
+    }
+}
+
+function expandSection(section) {
+    // If section uses collapsible pattern, expand it
+    // Implementation depends on your collapsible section structure
+    section.classList.add('expanded');
+    section.style.display = 'block';
+}
+
+// Attach to form submit
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('form.incident-form, form.hazard-form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            // Clear previous feedback
+            clearValidationFeedback();
+
+            // Run validation
+            const isValid = validateFormWithFeedback(form);
+
+            if (!isValid) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Also clear validation when user starts fixing errors
+        form.addEventListener('input', function(e) {
+            if (e.target.classList.contains('field-error')) {
+                e.target.classList.remove('field-error');
+                e.target.removeAttribute('aria-invalid');
+
+                const label = getLabelForField(e.target);
+                if (label) {
+                    label.classList.remove('label-error');
+                    label.querySelector('.error-indicator')?.remove();
+                }
+            }
+        });
+    });
+});
+```
+
+**CSS Styling:**
+
+**File:** `csc/src/csc/whs/browser/static/incident_form.css`
+
+```css
+/* Validation Summary */
+.validation-summary {
+    background-color: #f8d7da;
+    border: 2px solid #dc3545;
+    border-radius: 4px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    color: #721c24;
+}
+
+.validation-summary h3 {
+    margin-top: 0;
+    color: #dc3545;
+    font-size: 1.1rem;
+}
+
+.validation-summary ul {
+    margin: 0.75rem 0 0 0;
+    padding-left: 1.5rem;
+}
+
+.validation-summary li {
+    margin: 0.5rem 0;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.validation-summary li:hover {
+    color: #dc3545;
+    text-decoration: underline;
+}
+
+/* Field Error Styling */
+.field-error {
+    border: 2px solid #dc3545 !important;
+    background-color: #fff5f5 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.field-error:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.3rem rgba(220, 53, 69, 0.4) !important;
+}
+
+/* Label Error Styling */
+.label-error {
+    color: #dc3545 !important;
+    font-weight: bold;
+}
+
+.error-indicator {
+    color: #dc3545;
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-left: 0.25rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Section Header Error Styling */
+.section-error {
+    color: #dc3545 !important;
+    background-color: #fff5f5;
+    padding: 0.75rem;
+    border-left: 4px solid #dc3545;
+    border-radius: 4px;
+}
+
+.section-error-badge {
+    display: inline-block;
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+    animation: shake 0.5s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Expanded section visibility */
+.form-section.expanded {
+    display: block !important;
+}
+
+/* Accessibility improvements */
+[aria-invalid="true"] {
+    /* Additional styling for screen readers */
+}
+
+/* Focus states for error fields */
+.field-error:focus-visible {
+    outline: 3px solid #dc3545;
+    outline-offset: 2px;
+}
+```
+
+**Files to Modify:**
+- `csc/src/csc/whs/browser/static/incident_form.js` - Add comprehensive validation logic
+- `csc/src/csc/whs/browser/static/hazard_form.js` - Same validation logic (or create shared validation.js)
+- `csc/src/csc/whs/browser/static/incident_form.css` - Add error styling
+- `csc/src/csc/whs/browser/static/hazard_form.css` - Add error styling (or create shared forms.css)
+
+**Alternative/Fallback: Server-Side Validation**
+
+For cases where JavaScript is disabled, enhance server-side validation in intake processing:
+
+**File:** `csc/src/csc/whs/browser/intake.py`
+
+```python
+def validate_required_fields(form_data):
+    """Validate required fields and return detailed error messages"""
+    errors = []
+
+    # Check each required field
+    if not form_data.get('description', '').strip():
+        errors.append({
+            'field': 'description',
+            'question': 'Q14',
+            'message': 'Description (What happened) is required',
+            'section': 'Section 3: Incident Details'
+        })
+
+    if not form_data.get('immediate_actions', '').strip():
+        errors.append({
+            'field': 'immediate_actions',
+            'question': 'Q15',
+            'message': 'Immediate Actions Taken is required',
+            'section': 'Section 3: Incident Details'
+        })
+
+    # ... more validation ...
+
+    return errors
+
+def render_error_response(errors):
+    """Render detailed error page with section/field highlighting"""
+    html = """
+    <div class="validation-errors">
+        <h2>Please complete the following required fields:</h2>
+        <ul>
+    """
+
+    for error in errors:
+        html += f"""
+            <li>
+                <strong>{error['question']}</strong> {error['message']}
+                <br><small>In {error['section']}</small>
+            </li>
+        """
+
+    html += """
+        </ul>
+        <p><a href="javascript:history.back()">Return to form</a></p>
+    </div>
+    """
+
+    return html
+```
+
+**Testing:**
+- [ ] Submit form with missing required field → validation summary appears at top
+- [ ] Section header shows error badge and red styling
+- [ ] Field label shows red styling with "(Required)" indicator
+- [ ] Field itself has red border and background tint
+- [ ] Click error in summary → scrolls to field and focuses it
+- [ ] Validation summary lists all missing fields with section names
+- [ ] Start typing in error field → error styling clears
+- [ ] All section error badges clear when form is valid
+- [ ] Test with multiple missing fields across different sections
+- [ ] Test accessibility: screen reader announces errors
+- [ ] Test without JavaScript: server-side validation still works
+
+**Priority:** High (usability and accessibility improvement)
+**Estimated Effort:** 2-3 hours
+
+**Accessibility Considerations:**
+- Use `role="alert"` and `aria-live="assertive"` for validation summary
+- Use `aria-invalid="true"` on error fields
+- Ensure error messages are programmatically associated with fields
+- Provide keyboard navigation to error fields
+- Test with screen readers (NVDA, JAWS, VoiceOver)
+
+**Benefits:**
+- Clear visual feedback on exactly what's missing
+- Reduces user frustration and form abandonment
+- Improves accessibility for all users
+- Professional, modern UX matching industry best practices
+- Helps users complete forms correctly on first attempt
+
+---
+
+## Summary of Additional Enhancement Requests
+
+| # | Enhancement | Priority | Estimated Effort | Affects |
+|---|-------------|----------|------------------|---------|
+| #6 | Department dropdown alphabetical sorting | High | 0.5-1 hour | All forms (Incident & Hazard, authenticated & anonymous) |
+| #7 | Add "Return to home" link to hazard form | Medium | 0.5-1 hour | Hazard forms only |
+| #8 | Improve mandatory field validation feedback | High | 2-3 hours | All forms with required fields |
+
+**Total Estimated Effort:** 3-5 hours
+
+**When to Implement:**
+These enhancements should be implemented after completing the current Form Enhancement Implementation (Phase B, Requests #2-#5). They can be grouped as:
+- **Quick Wins (1-2 hours):** #6 and #7 together
+- **Major UX Enhancement (2-3 hours):** #8 as separate implementation
+
+**Version Planning:**
+- Current plan: v0.10.18 → v0.10.19 (Requests #2-#5)
+- These enhancements: v0.10.19 → v0.10.20 (Requests #6-#8)
+
+**Profile Version:**
+- Profile 18 → 19 (Current Form Enhancements)
+- Profile 19 → 20 (Additional UX Enhancements) - OR -
+- Profile 19 (no upgrade needed if only JS/CSS/template changes)
+
+**Note:** Requests #6 and #7 require no schema changes or data migration, so may not need profile version bump. Request #8 is purely client-side (JS/CSS), also no profile change needed. Consider releasing as v0.10.19.1 or v0.10.20 with same profile version (19).

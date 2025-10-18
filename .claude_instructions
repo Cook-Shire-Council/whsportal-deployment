@@ -245,12 +245,46 @@ This tracking enables Cook Shire Council to:
 - **WHSOfficer_Requests.md**: Update individual request entries with actual vs estimated time
 - **Session Summary**: Include brief time summary in "Recent Session Work" sections
 
-## Current Development Status (Updated: 2025-10-16)
+## Current Development Status (Updated: 2025-10-19)
+
+### **Phase A: Division → Department Field - COMPLETE ✅**
+- **Version**: csc.whs v0.10.18.7 (Profile v18)
+- **Status**: All 10 phases complete, tested, and deployed
+- **Deployment Date**: October 19, 2025
+- **WHS Officer Request**: #1 - Replace Division with Department field
+
+**All Phases Complete:**
+- ✅ Phase 1: Department Vocabulary (26 departments)
+- ✅ Phase 2: Schema Updates (IIncident, IHazard)
+- ✅ Phase 3: LDAP Auto-Population (JavaScript integration)
+- ✅ Phase 4: Form Templates Updated
+- ✅ Phase 5: Intake Processing
+- ✅ Phase 6: View Templates (incident.pt, hazard.pt) - Created view_helpers.py
+- ✅ Phase 7: Email Notifications
+- ✅ Phase 8: Data Migration (Profile v17→v18 upgrade step)
+- ✅ Phase 9: Testing (all UAT verified by user)
+- ✅ Phase 10: Documentation & Deployment
+
+**Key Achievements:**
+- 15 files modified, 1 new file created (view_helpers.py for TAL security)
+- Resolved "Insufficient Privileges" TAL security error by creating registered browser view
+- LDAP auto-population working for incidents
+- Manual selection working for hazards
+- Department displays as full names (not tokens) in all views and emails
+- All user testing verified successfully
+
+**Issues Identified During Testing:**
+- 3 new UX enhancement requests documented in Form_Enhancement_Implementation.md
+  1. Department dropdown alphabetical sorting
+  2. Missing "Return to home" link in hazard form
+  3. Enhanced mandatory field validation feedback
+
+**Next Phase**: Phase B - Form Enhancements (Requests #2-#5 + new #6-#8 consolidated)
 
 ### **Phase 2: Interactive Body Map & View Enhancements - COMPLETE ✅**
-- **Version**: csc.whs v0.10.16 (Profile v17)
-- **Status**: Deployed, tested, and ready for stakeholder feedback
-- **Latest Commit**: v0.10.16 "Phase 2 Complete: Additional People Section Improvements"
+- **Version**: csc.whs v0.10.17 (Profile v17)
+- **Status**: Deployed to whsportaldev server
+- **Latest Commit**: v0.10.17 "Document Phase 1 Security Implementation"
 
 **Phase 2 Achievements (v0.10.4 - v0.10.16)**:
 - ✅ **Enhanced CSS Checkbox Grid Layout** (v0.10.4)
@@ -315,9 +349,10 @@ This tracking enables Cook Shire Council to:
 
 When starting work on the WHSPortal project, check these files in order:
 
-1. **PROJECT_STATUS.md** (project root) - Overall project status and recent changes (v0.10.16)
+1. **PROJECT_STATUS.md** (project root) - Overall project status and recent changes (v0.10.17)
 2. **This file** (.claude_instructions) - Development workflow and current status
-3. **csc/README.md** - csc.whs addon features and version history (v0.10.16)
+3. **csc/README.md** - csc.whs addon features and version history (v0.10.17)
+4. **Division_to_Department_Implementation.md** - Phase A implementation plan (in progress)
 4. **Phase_2_csc.whs_form_update_implementation_plan.md** - Phase 2 implementation plan and tracking
 5. **INCIDENT_FORM_PHASE1_CHANGES.md** - Phase 1 implementation details
 6. **ANONYMOUS_FORM_UPDATE_SUMMARY.md** - Anonymous form deployment guide

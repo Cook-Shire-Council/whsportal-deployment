@@ -1,8 +1,8 @@
 # WHS Portal Project Status
 
-**Date:** October 16, 2025
-**Version:** 0.10.17
-**Status:** ✅ **PHASE 1 SECURITY COMPLETE - Anonymous Form Protection Implemented**
+**Date:** October 19, 2025
+**Version:** 0.10.18.7 (deployed)
+**Status:** ✅ **PHASE A COMPLETE - Division → Department Field Implementation**
 
 ## Executive Summary
 
@@ -14,8 +14,8 @@ The Cook Shire Council WHS Portal is a comprehensive workplace health and safety
 - **Server:** whsportaldev
 - **URL:** https://whsportal.cook.qld.gov.au
 - **Plone Version:** 6.0.x (Build 6110)
-- **csc.whs Version:** 0.10.17
-- **Profile Version:** 17
+- **csc.whs Version:** 0.10.18.7 (deployed)
+- **Profile Version:** 18 (deployed)
 - **Deployment Method:** Systemd service with automated deployment script
 
 ### Key Features
@@ -243,7 +243,8 @@ The Cook Shire Council WHS Portal is a comprehensive workplace health and safety
 | 0.10.5-0.10.14 | Oct 15-16, 2025 | **Phase 2.2** - SVG body map development and refinement |
 | 0.10.15 | Oct 16, 2025 | **Phase 2.3** - Incident view updated, legacy fields hidden |
 | 0.10.16 | Oct 16, 2025 | **Phase 2 Complete** - Additional people section improvements |
-| 0.10.17 | Oct 16, 2025 | **CURRENT - Phase 1 Security** - Anonymous form protection (honeypot, rate limiting, duplicate detection) |
+| 0.10.17 | Oct 16, 2025 | **Phase 1 Security** - Anonymous form protection (honeypot, rate limiting, duplicate detection) |
+| 0.10.18 | Oct 18, 2025 | **CURRENT - Phase A (WHS Request #1)** - Replace Division with Department field (5/10 phases complete) |
 
 ### Phase 1 Enhancements (October 15, 2025)
 
@@ -685,7 +686,188 @@ All previously identified issues have been resolved as of v0.9.17.
 - ~600+ lines of security integration code
 - Total contribution: Comprehensive zero-friction security layer for anonymous forms
 
+### Phase A Implementation - Division → Department Field (October 18-19, 2025)
+
+#### WHS Officer Request #1: Replace Division with Department Field (v0.10.17 → v0.10.18.7)
+**Goal:** Replace the 4-directorate "Division" field with a more specific 26-department "Department" field across both incident and hazard forms, with LDAP auto-population for incidents.
+
+**Implementation Status: ✅ COMPLETE (All 10 Phases)**
+
+**All Phases Complete (1-10):**
+
+**Phase 1: Department Vocabulary** ✅
+- Created `DepartmentVocabulary` with all 26 Cook Shire Council departments
+- Registered vocabulary in `vocabularies.py` (22 lines added)
+- Vocabulary organized by directorate for clarity
+- Follows same pattern as existing DirectorateVocabulary
+
+**Phase 2: Schema Updates** ✅
+- Updated `interfaces.py` IIncident schema (3 lines modified)
+  - Changed field title from "Division" to "Department"
+  - Updated vocabulary from DirectorateVocabulary to DepartmentVocabulary
+  - Updated description with LDAP auto-population note
+- Updated `interfaces.py` IHazard schema (3 lines modified)
+  - Changed field title to "Department primarily associated with this hazard"
+  - Updated vocabulary to DepartmentVocabulary
+  - Updated description for manual selection workflow
+- Deprecated `division` field marked for future removal (backwards compatibility maintained)
+
+**Phase 3: LDAP Auto-Population for Incidents** ✅
+- Updated `ldap_utils.py` with department mapping logic (98 lines added)
+  - Created `DEPARTMENT_KEYWORDS` mapping dictionary for fuzzy matching
+  - Implemented `map_ldap_department_to_vocabulary()` function
+  - 26 department mappings with keyword variations
+  - Handles edge cases (None values, empty strings, no matches)
+  - Returns vocabulary token or None
+- Updated JavaScript `incident_form.js` (5 lines modified)
+  - Integrated department auto-population on employee selection
+  - Populates #department field using fuzzy keyword matching
+  - User can override auto-populated value if needed
+
+**Phase 4: Form Templates Updated** ✅
+- Updated `report_incident.pt` template (12 lines modified)
+  - Q5: Changed label from "Division" to "Department"
+  - Updated description to mention LDAP auto-population
+  - Changed dropdown to call `view/get_department_options`
+  - Maintains same field name (`department`) for consistency
+- Updated `report_hazard.pt` template (12 lines modified)
+  - Q5: Changed label to "Department primarily associated with this hazard"
+  - Updated description for manual selection context
+  - Changed dropdown to call `view/get_department_options`
+- Note: `anonymous_form.pt` does not include organizational fields (intentionally simplified)
+
+**Phase 5: Intake Processing & View Helpers** ✅
+- Updated `browser/intake.py` (3 lines modified)
+  - Modified Q5 comment from "Division" to "Department"
+  - Changed vocabulary resolution to use DepartmentVocabulary
+  - Maintains same field name for consistency
+- Updated `browser/hazard_intake.py` (3 lines modified)
+  - Modified Q5 comment to "Department primarily associated with this hazard"
+  - Changed vocabulary resolution to use DepartmentVocabulary
+- Added `get_department_options()` to `browser/anonymous.py` (3 lines added)
+  - Helper method for incident form template
+  - Returns list of dicts with value/title keys
+  - Uses existing `_get_vocabulary_options()` pattern
+- Updated `browser/report_hazard.py` (28 lines added)
+  - Added `_get_vocabulary_options()` helper method (22 lines)
+  - Refactored `get_directorate_options()` to use helper
+  - Added `get_department_options()` method (3 lines)
+  - Follows same pattern as anonymous.py
+
+**Phase 6: Update View Templates** ✅
+- Updated `incident.pt` and `hazard.pt` templates to display department field
+- Created `view_helpers.py` browser view for vocabulary resolution
+- Registered @@view-helpers view in configure.zcml
+- Resolved TAL security restrictions (Insufficient Privileges error)
+- Department displays as full name (e.g., "Information and Communications Technology") not token
+
+**Phase 7: Update Email Notifications** ✅
+- Updated email notification templates to show "Department" field
+- Department displays as full human-readable name in emails
+
+**Phase 8: Data Migration / Upgrade Step** ✅
+- Created v18 upgrade step for Profile 17→18
+- Migrated existing incidents and hazards
+- Backwards compatibility maintained
+
+**Phase 9: Testing** ✅
+- LDAP auto-population verified for incident forms
+- Manual department selection verified for hazard forms
+- Department field displays full names in view templates
+- Email notifications display department correctly
+- All user acceptance testing completed and verified
+
+**Phase 10: Documentation & Deployment** ✅
+- Version updated to 0.10.18.7
+- Deployed via `./deploy-systemd.sh csc`
+- Profile upgrade 17→18 completed successfully
+- All documentation updated
+
+**Files Modified (All 10 Phases):**
+1. `src/csc/whs/vocabularies.py` - Added DepartmentVocabulary
+2. `src/csc/whs/interfaces.py` - Updated IIncident and IHazard schemas
+3. `src/csc/whs/ldap_utils.py` - Added department mapping logic
+4. `src/csc/whs/browser/static/incident_form.js` - Integrated auto-population
+5. `src/csc/whs/browser/templates/report_incident.pt` - Updated Q5 field
+6. `src/csc/whs/browser/templates/report_hazard.pt` - Updated Q5 field
+7. `src/csc/whs/browser/intake.py` - Updated intake processing
+8. `src/csc/whs/browser/hazard_intake.py` - Updated hazard intake
+9. `src/csc/whs/browser/anonymous.py` - Added view helper method
+10. `src/csc/whs/browser/report_hazard.py` - Added view helpers
+11. `src/csc/whs/browser/templates/incident.pt` - Display department field
+12. `src/csc/whs/browser/templates/hazard.pt` - Display department field
+13. `src/csc/whs/browser/view_helpers.py` - Vocabulary resolution (NEW)
+14. `src/csc/whs/configure.zcml` - Registered view-helpers browser view
+15. `csc/pyproject.toml` - Version updated to 0.10.18.7
+
+**Code Changes (All Phases):**
+- 15 files modified
+- 1 new file created (view_helpers.py)
+- Full backwards compatibility maintained
+- No breaking changes to existing data
+- Profile upgraded 17→18 successfully
+
+**Key Technical Details:**
+- **Vocabulary Pattern**: Follows existing Plone IVocabularyFactory pattern
+- **LDAP Integration**: Fuzzy keyword matching maps AD department names to vocabulary tokens
+- **User Experience**: Auto-populated for incidents, manual selection for hazards
+- **Backwards Compatible**: Division field deprecated but not removed (yet)
+- **26 Departments Across 4 Directorates**:
+  - Corporate & Community Services (8 depts)
+  - Infrastructure Services (10 depts)
+  - Planning & Environment (5 depts)
+  - Organisational Services (3 depts)
+
+**Implementation Documentation:**
+- Full 10-phase plan: `Division_to_Department_Implementation.md`
+- Progress tracking updated after each phase
+- Implementation pattern matches Phase 1 & 2 proven approach
+
+**Completion Summary:**
+- **Deployment Date:** October 19, 2025
+- **Version Deployed:** csc.whs v0.10.18.7
+- **Profile Version:** 18
+- **All Testing Verified:** User confirmed all functionality working correctly
+- **Issues Identified:** 3 new UX enhancement requests documented for Phase B
+  - Department dropdown alphabetical sorting
+  - Missing "Return to home" link in hazard form
+  - Enhanced mandatory field validation visual feedback
+- **Next Phase:** Phase B - Form Enhancements (Requests #2-#5) consolidated implementation
+
 ## Recent Session Work
+
+### October 19, 2025 - Phase A Implementation COMPLETE (All 10 Phases)
+**Division → Department Field Implementation Completed and Deployed**
+
+- ✅ Created DepartmentVocabulary with 26 departments organized by directorate
+- ✅ Updated IIncident and IHazard schemas to use Department field
+- ✅ Implemented LDAP department auto-population for incidents (fuzzy keyword matching)
+- ✅ Updated incident_form.js to integrate department auto-population
+- ✅ Updated report_incident.pt and report_hazard.pt templates (Q5 field)
+- ✅ Updated intake.py and hazard_intake.py processing logic
+- ✅ Added get_department_options() view helpers to anonymous.py and report_hazard.py
+- ✅ Updated incident.pt and hazard.pt view templates to display department
+- ✅ Created view_helpers.py browser view for vocabulary resolution
+- ✅ Resolved TAL security restrictions ("Insufficient Privileges" error)
+- ✅ Verified department displays as full names (not tokens)
+- ✅ All user acceptance testing completed successfully
+- ✅ Deployed v0.10.18.7 with Profile 18 upgrade
+- ✅ Documented 3 new UX enhancement requests for Phase B
+- ✅ Updated all documentation (Division_to_Department_Implementation.md, PROJECT_STATUS.md, .claude_instructions)
+- ✅ Comprehensive git commit created
+- 📋 **Next:** Phase B - Form Enhancements (Requests #2-#5 + new UX enhancements #6-#8)
+
+**AI-Assisted Development Metrics (All 10 Phases):**
+- Estimated Traditional Development: 8-10 hours
+- Actual AI-Assisted Time: ~2.5 hours (across multiple sessions)
+- Productivity Gain: ~70-75% time savings
+- AI Contribution: Full-stack implementation (schema, vocabularies, LDAP integration, JavaScript, templates, TAL security resolution, testing guidance)
+
+**Key Challenges Solved:**
+1. **TAL Security Restrictions:** Resolved "Insufficient Privileges" error by creating registered browser view (@@view-helpers) instead of direct module access
+2. **Vocabulary Resolution:** Implemented proper pattern for converting tokens to human-readable names in view templates
+3. **LDAP Auto-Population:** Fuzzy keyword matching successfully maps AD department names to vocabulary tokens
+4. **User Testing:** Identified 3 additional UX enhancement opportunities during testing phase
 
 ### October 18, 2025 - WHS Officer Change Requests Implementation Planning
 - ✅ Documented 5 WHS Officer change requests in `WHSOfficer_Requests.md`
