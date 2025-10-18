@@ -206,6 +206,45 @@ gh repo view
 - Consider Australian local government context and requirements
 - Prioritize workplace health and safety use cases
 
+## AI-Assisted Development Tracking
+
+**IMPORTANT**: When implementing features or changes documented in implementation plans, track actual development time vs estimated time:
+
+### Time Tracking Protocol
+1. **At Start of Work Session**: Note the start time for the implementation task
+2. **During Implementation**: Track time spent on each phase/component
+3. **At Completion**: Calculate total actual time spent (your time + AI coding time)
+4. **Record in PROJECT_STATUS.md**: Update the relevant section with:
+   - **Estimated Time**: From the implementation plan
+   - **Actual Time**: Total collaborative development time
+   - **Breakdown**: Time split between planning, coding, testing, deployment
+   - **Productivity Gain**: Calculate efficiency improvement percentage
+
+### Example Recording Format
+```
+**Implementation Metrics (AI-Assisted):**
+- Estimated Time: 8-10 hours (traditional development)
+- Actual Time: 3.5 hours total
+  - Planning/Review: 0.5 hours
+  - Coding (AI-assisted): 1.5 hours
+  - Testing: 1.0 hours
+  - Deployment: 0.5 hours
+- Productivity Gain: 65-71% time savings
+- AI Contribution: Automated code generation, schema updates, template modifications
+```
+
+### Purpose
+This tracking enables Cook Shire Council to:
+- Quantify productivity improvements from AI-assisted development
+- Build accurate estimates for future AI-assisted projects
+- Demonstrate ROI of AI collaboration to stakeholders
+- Identify which development phases benefit most from AI assistance
+
+### Where to Record
+- **PROJECT_STATUS.md**: Add time tracking metrics to each phase/version entry
+- **WHSOfficer_Requests.md**: Update individual request entries with actual vs estimated time
+- **Session Summary**: Include brief time summary in "Recent Session Work" sections
+
 ## Current Development Status (Updated: 2025-10-16)
 
 ### **Phase 2: Interactive Body Map & View Enhancements - COMPLETE ✅**
