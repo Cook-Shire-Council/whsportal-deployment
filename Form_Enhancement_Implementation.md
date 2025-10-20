@@ -1,10 +1,62 @@
 # Phase B Implementation Plan: Form Enhancements (Consolidated)
 
-**Version:** csc.whs v0.10.18 → v0.10.19
-**Profile Version:** 18 → 19
-**Status:** 📋 Ready to Implement
+**Version:** csc.whs v0.10.18 → v0.10.27 (DEPLOYED)
+**Profile Version:** 18 → 19 (COMPLETE)
+**Status:** ✅ **COMPLETE - All Enhancements Deployed**
+**Completion Date:** October 20, 2025
 **Priority:** Medium
 **Estimated Effort:** 12-14 hours (AI-assisted, consolidated)
+**Actual Effort:** ~10-12 hours (AI-assisted implementation)
+
+---
+
+## ✅ Implementation Complete - Summary
+
+**All Phase B enhancements (#2-#5) have been successfully implemented and deployed as of v0.10.27.**
+
+### Completed Enhancements:
+
+✅ **Request #2: Section 3 Enhancements**
+- Title auto-generation implemented in JavaScript (from location_town + date)
+- Description field (Q14) mapped to Dublin Core description
+- immediate_actions field (Q15) made required in schema
+
+✅ **Request #3: Number Section 3 Questions**
+- Q13: Brief Title / Summary (auto-generated)
+- Q14: What happened (required - Description field)
+- Q15: Immediate Actions Taken (required)
+- Question numbering visible in form templates and comments
+
+✅ **Request #4: Move Emergency Services to Section 3**
+- emergency_services_called field added (Q16) - Choice field (Yes/No/Uncertain)
+- emergency_services_types field added (Q17) - Multi-select, conditional on Q16
+- EmergencyServicesTypesVocabulary created (6 service types)
+- Fields properly integrated in Section 3 of incident form
+
+✅ **Request #5: Add Plant Number Field**
+- plant_number field added (Q27) in Section 5 (Property Damage)
+- Optional TextLine field for Council plant/vehicle identification
+- Integrated in form templates and view templates
+
+✅ **Question Renumbering Complete**
+- All questions renumbered from Q13-Q30 throughout incident form
+- Section 4 (Injury Details): Q18-Q24 (shifted +2)
+- Section 5 (Property Damage): Q25-Q28 (shifted +2 for emergency, +1 for plant)
+- Section 6 (Preliminary Observations): Q29-Q30 (shifted +2)
+
+✅ **Additional UX Enhancements Completed**
+- Request #6: Department dropdown alphabetical sorting (v0.10.18)
+- Request #7: Return to home link in success messages (v0.10.22)
+- Request #8: Enhanced mandatory field validation (v0.10.18-0.10.21)
+- Request #9: Print view functionality (v0.10.23-0.10.27)
+
+### Evidence of Implementation:
+- **Schema:** `interfaces.py` lines 169-195 show Q13-Q17 with emergency services fields
+- **Schema:** `interfaces.py` line 316 shows plant_number field (Q27)
+- **Vocabulary:** `vocabularies.py` contains EmergencyServicesTypesVocabulary
+- **Templates:** incident form templates reference Q13-Q30 numbering
+- **Profile:** Upgrade step 18→19 completed successfully
+- **Deployed:** Version 0.10.27 live on production server
 
 ---
 
@@ -2487,3 +2539,543 @@ These enhancements should be implemented after completing the current Form Enhan
 - Profile 19 (no upgrade needed if only JS/CSS/template changes)
 
 **Note:** Requests #6 and #7 require no schema changes or data migration, so may not need profile version bump. Request #8 is purely client-side (JS/CSS), also no profile change needed. Consider releasing as v0.10.19.1 or v0.10.20 with same profile version (19).
+
+---
+
+### Enhancement Request #9: Print View for Forms and Reports
+
+**Issue Identified:**
+Users who are accustomed to paper-based processes need the ability to print clean, professional copies of:
+- Submitted incident reports (from incident view page)
+- Submitted hazard reports (from hazard view page)
+- Form submission success pages (immediately after submitting)
+
+**Current Behavior:**
+- No print-optimized view available
+- Printing from browser includes unwanted elements (navigation, headers, footers, toolbar, workflow actions)
+- Layout not optimized for paper (A4 or Letter size)
+- No dedicated "Print" button provided to users
+
+**Requested Changes:**
+1. Add print-optimized styling for incident view page
+2. Add print-optimized styling for hazard view page
+3. Add "Print" button to both view pages
+4. Add print link/button to form submission success responses
+5. Hide non-printable elements (navigation, toolbar, buttons, etc.)
+6. Optimize layout for paper (page breaks, margins, font sizes)
+7. Ensure all form data displays clearly on printed page
+
+**Why This Matters:**
+- Some users prefer paper copies for filing
+- Safety meetings may require printed incident reports
+- Offline reference during site inspections
+- Compliance documentation and record-keeping
+- Some departments maintain paper filing systems
+
+**Implementation Approach:**
+
+**Option A: CSS-Based Print Styles (Recommended) - 1.5-2 hours**
+
+This approach uses `@media print` CSS rules to transform existing views into print-friendly formats, with a JavaScript "Print" button that triggers the browser's print dialog.
+
+**Advantages:**
+- No duplicate templates to maintain
+- Works with existing view structure
+- Standard browser print functionality (PDF save, printer selection)
+- Quick implementation
+- Universal browser support
+
+**Files to Modify (6 files):**
+
+1. **`csc/src/csc/whs/browser/static/incident_form.css`** - Add @media print styles
+
+```css
+/* ========================================
+   PRINT STYLES - INCIDENT REPORT
+   ======================================== */
+
+@media print {
+    /* Hide non-printable elements */
+    .portalHeader,
+    .portalFooter,
+    nav,
+    .toolbar,
+    .workflow-actions,
+    .contentActions,
+    .button,
+    .print-button,
+    .edit-bar,
+    .back-link,
+    .breadcrumbs,
+    .document-actions,
+    #portal-column-one,
+    #portal-column-two {
+        display: none !important;
+    }
+
+    /* Optimize body for print */
+    body {
+        font-size: 11pt;
+        line-height: 1.4;
+        color: #000;
+        background: #fff;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Page setup */
+    @page {
+        size: A4;
+        margin: 2cm 1.5cm;
+    }
+
+    /* Report header */
+    .incident-report-header,
+    .hazard-report-header {
+        border-bottom: 2px solid #000;
+        padding-bottom: 0.5cm;
+        margin-bottom: 0.75cm;
+    }
+
+    .incident-report-header h1,
+    .hazard-report-header h1 {
+        font-size: 18pt;
+        margin: 0 0 0.25cm 0;
+        page-break-after: avoid;
+    }
+
+    /* Section headers */
+    .section-header {
+        font-size: 14pt;
+        font-weight: bold;
+        background-color: #f0f0f0;
+        padding: 0.3cm;
+        margin-top: 0.5cm;
+        margin-bottom: 0.3cm;
+        border-left: 4px solid #333;
+        page-break-after: avoid;
+    }
+
+    /* Fields */
+    .field {
+        margin-bottom: 0.4cm;
+        page-break-inside: avoid;
+    }
+
+    .field strong {
+        font-weight: bold;
+        color: #000;
+    }
+
+    .field p,
+    .field span {
+        margin: 0.1cm 0 0 0;
+        padding: 0;
+    }
+
+    /* Lists */
+    ul, ol {
+        margin: 0.2cm 0 0.2cm 0.5cm;
+        padding: 0;
+    }
+
+    li {
+        margin-bottom: 0.1cm;
+    }
+
+    /* Tables (like risk matrix) */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        page-break-inside: avoid;
+        margin: 0.3cm 0;
+    }
+
+    table td,
+    table th {
+        border: 1px solid #000;
+        padding: 0.2cm;
+        font-size: 10pt;
+    }
+
+    /* Risk matrix specific */
+    .risk-matrix {
+        page-break-inside: avoid;
+        margin: 0.5cm 0;
+    }
+
+    .risk-matrix td {
+        text-align: center;
+        font-size: 9pt;
+        padding: 0.15cm;
+    }
+
+    /* Hazard sections */
+    .hazard-section {
+        page-break-inside: avoid;
+        margin-bottom: 0.5cm;
+    }
+
+    /* Preserve colors in risk matrix for printing */
+    .risk-matrix td[style*="background"] {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Section breaks */
+    .section {
+        page-break-inside: avoid;
+    }
+
+    /* Avoid breaking after labels */
+    label,
+    .field-label {
+        page-break-after: avoid;
+    }
+
+    /* Footer info */
+    .print-footer {
+        display: block !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 9pt;
+        color: #666;
+        border-top: 1px solid #ccc;
+        padding-top: 0.2cm;
+    }
+
+    /* Workflow state badge */
+    .state-badge {
+        border: 1px solid #000;
+        padding: 0.1cm 0.2cm;
+        font-size: 10pt;
+        display: inline-block;
+    }
+
+    /* Images and logos */
+    img {
+        max-width: 100%;
+        page-break-inside: avoid;
+    }
+
+    /* Links - show URL for important links */
+    a[href^="http"]:after {
+        content: " (" attr(href) ")";
+        font-size: 9pt;
+        color: #666;
+    }
+
+    /* But not for internal links */
+    a[href^="/"]:after,
+    a[href^="#"]:after {
+        content: "";
+    }
+}
+```
+
+2. **`csc/src/csc/whs/browser/static/hazard_form.css`** - Add same @media print styles
+
+Same CSS as above, adjusted for hazard-specific classes if needed.
+
+3. **`csc/src/csc/whs/browser/templates/incident.pt`** - Add print button
+
+```html
+<!-- Add near top of view template, after header -->
+<div class="document-actions" style="margin-bottom: 1rem;">
+    <button type="button"
+            class="button print-button"
+            onclick="window.print()"
+            style="background-color: #007bff; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
+        🖨️ Print Report
+    </button>
+</div>
+
+<!-- Add print footer (hidden on screen, shown on print) -->
+<div class="print-footer" style="display: none;">
+    Printed from WHS Portal | Cook Shire Council |
+    <span tal:content="python:context.toLocalizedTime(context.modified())">Date</span> |
+    Report ID: <span tal:content="context/id">ID</span>
+</div>
+```
+
+4. **`csc/src/csc/whs/browser/templates/hazard.pt`** - Add print button
+
+Same as incident.pt above, adjusted for hazard context.
+
+5. **`csc/src/csc/whs/browser/intake.py`** - Add print link to success response
+
+```python
+def process_incident_form(request):
+    """Process incident form submission"""
+    # ... existing processing ...
+
+    # Success response with print link
+    success_html = f"""
+    <div class="success-message">
+        <h2>Incident Report Submitted Successfully</h2>
+        <p>Your incident report has been recorded with ID: <strong>{incident.id}</strong></p>
+        <p>The WHS team has been notified and will review your report.</p>
+
+        <div class="success-actions" style="margin-top: 1.5rem;">
+            <a href="{incident.absolute_url()}"
+               class="button"
+               style="margin-right: 1rem; background-color: #007bff; color: white; padding: 0.5rem 1rem; text-decoration: none; border-radius: 4px;">
+                View Report
+            </a>
+            <button type="button"
+                    onclick="window.print()"
+                    class="button"
+                    style="background-color: #28a745; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
+                🖨️ Print This Page
+            </button>
+        </div>
+
+        <p style="margin-top: 1rem;">
+            <a href="/">Return to home page</a>
+        </p>
+    </div>
+    """
+
+    return success_html
+```
+
+6. **`csc/src/csc/whs/browser/hazard_intake.py`** - Add print link to success response
+
+Same as intake.py above, adjusted for hazard context.
+
+**JavaScript Enhancement (Optional):**
+
+Add to `incident_form.js` or create `print.js`:
+
+```javascript
+/**
+ * Print functionality with pre-print preparation
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Add keyboard shortcut Ctrl+P / Cmd+P handler
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            e.preventDefault();
+            preparePrintView();
+            window.print();
+        }
+    });
+
+    // Enhance print buttons
+    const printButtons = document.querySelectorAll('.print-button');
+    printButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            preparePrintView();
+            window.print();
+        });
+    });
+});
+
+/**
+ * Prepare view for printing
+ * - Expand all collapsed sections
+ * - Ensure all content is visible
+ */
+function preparePrintView() {
+    // Expand all collapsible sections
+    const collapsedSections = document.querySelectorAll('.collapsed');
+    collapsedSections.forEach(section => {
+        section.classList.remove('collapsed');
+        section.classList.add('expanded');
+    });
+
+    // Show any hidden conditional fields that have data
+    const hiddenFields = document.querySelectorAll('[style*="display: none"]');
+    hiddenFields.forEach(field => {
+        const hasContent = field.textContent.trim().length > 0;
+        if (hasContent) {
+            field.style.display = 'block';
+        }
+    });
+
+    // Add print-ready class to body
+    document.body.classList.add('print-ready');
+}
+
+/**
+ * Clean up after print (or cancel)
+ */
+window.addEventListener('afterprint', function() {
+    document.body.classList.remove('print-ready');
+});
+```
+
+**Testing Checklist:**
+- [ ] **Incident View Page:**
+  - [ ] Print button displays prominently
+  - [ ] Clicking print button opens browser print dialog
+  - [ ] Print preview shows clean layout without navigation/toolbar
+  - [ ] All incident data visible in print preview
+  - [ ] Risk matrix (if present) displays correctly with colors
+  - [ ] Section headers display clearly
+  - [ ] Page breaks avoid splitting related content
+  - [ ] Print footer shows document metadata
+
+- [ ] **Hazard View Page:**
+  - [ ] Print button displays prominently
+  - [ ] Print preview shows clean layout
+  - [ ] Risk matrix displays correctly (before/after if dual assessment implemented)
+  - [ ] All hazard data visible
+  - [ ] Images/photos display correctly (if applicable)
+
+- [ ] **Form Submission Success Page:**
+  - [ ] Print button displays in success message
+  - [ ] Clicking print creates printable success confirmation
+  - [ ] Includes report ID and submission details
+
+- [ ] **Cross-Browser Testing:**
+  - [ ] Chrome - Print preview and PDF save
+  - [ ] Firefox - Print preview and PDF save
+  - [ ] Edge - Print preview and PDF save
+  - [ ] Safari - Print preview and PDF save (if Mac users)
+
+- [ ] **Print Quality:**
+  - [ ] Text is readable (11pt minimum)
+  - [ ] Colors print correctly (risk matrix)
+  - [ ] Page margins appropriate
+  - [ ] No cut-off text
+  - [ ] No blank pages
+  - [ ] Multi-page reports paginate correctly
+
+- [ ] **Keyboard Shortcut:**
+  - [ ] Ctrl+P (Windows/Linux) triggers print
+  - [ ] Cmd+P (Mac) triggers print
+
+- [ ] **PDF Save:**
+  - [ ] "Save as PDF" from print dialog works
+  - [ ] PDF is searchable
+  - [ ] PDF maintains formatting
+  - [ ] PDF file size reasonable
+
+**Option B: Dedicated Print View Templates - 3-4 hours**
+
+This approach creates separate `@@print` views with dedicated templates optimized for printing.
+
+**Advantages:**
+- Complete control over print layout
+- Can include print-specific content (cover page, signatures, etc.)
+- Easier to customize for different report types
+
+**Disadvantages:**
+- Duplicate templates to maintain
+- More code to write and test
+- Slightly more complex implementation
+
+**Implementation sketch:**
+- Create `csc/src/csc/whs/browser/print_views.py`
+- Create `csc/src/csc/whs/browser/templates/incident_print.pt`
+- Create `csc/src/csc/whs/browser/templates/hazard_print.pt`
+- Register `@@print` view for Incident and Hazard content types
+- Add "Print" button that links to `{object_url}/@@print`
+- Print view would still use @media print CSS but with simpler template
+
+**Not recommended for this use case** because:
+- Option A achieves same result with less code
+- No maintenance burden of duplicate templates
+- Standard browser print gives users more control (page range, margins, etc.)
+
+**Recommendation:**
+
+Implement **Option A (CSS-Based Print Styles)** as it:
+- Is faster to implement (1.5-2 hours vs 3-4 hours)
+- Requires less ongoing maintenance
+- Provides standard print functionality users expect
+- Allows users to save as PDF natively
+- Works with all modern browsers
+
+**Implementation Order:**
+
+1. **Phase 1: Core Print Styles (1 hour)**
+   - Add @media print CSS to incident_form.css and hazard_form.css
+   - Test print preview with existing incident/hazard data
+
+2. **Phase 2: Print Buttons (0.5 hour)**
+   - Add print buttons to incident.pt and hazard.pt templates
+   - Add print buttons to submission success responses
+   - Test button functionality
+
+3. **Phase 3: JavaScript Enhancements (Optional, 0.5 hour)**
+   - Add preparePrintView() function to expand sections
+   - Add keyboard shortcut handling
+   - Test across browsers
+
+**Files to Modify (6 files):**
+- [ ] `csc/src/csc/whs/browser/static/incident_form.css` - @media print styles
+- [ ] `csc/src/csc/whs/browser/static/hazard_form.css` - @media print styles
+- [ ] `csc/src/csc/whs/browser/templates/incident.pt` - Add print button
+- [ ] `csc/src/csc/whs/browser/templates/hazard.pt` - Add print button
+- [ ] `csc/src/csc/whs/browser/intake.py` - Add print button to success response
+- [ ] `csc/src/csc/whs/browser/hazard_intake.py` - Add print button to success response
+
+**Optional Enhancement:**
+- [ ] `csc/src/csc/whs/browser/static/print.js` - JavaScript print preparation (create new file)
+
+**Priority:** Medium (nice-to-have feature, not critical)
+**Estimated Effort:** 1.5-2 hours (Option A recommended)
+**Dependencies:** None (can be implemented independently)
+**Schema Changes:** None (no profile version bump required)
+**Data Migration:** None
+
+**User Benefits:**
+- Easy access to printable versions of reports
+- Professional-looking printed documents
+- Paper copies for filing and meetings
+- PDF export capability (via browser print-to-PDF)
+- Maintains existing digital workflow while supporting paper needs
+
+**When to Implement:**
+Can be implemented:
+- As part of v0.10.20 UX Enhancements (along with Requests #6-#8)
+- As standalone v0.10.19.1 release (minor feature addition)
+- After completing current Form Enhancements (Requests #2-#5)
+
+**Version Planning:**
+- No profile version change needed (purely CSS/template/JS)
+- Can be v0.10.19.1 or v0.10.20
+- Include in same release as Requests #6-#8 for efficient deployment
+
+---
+
+## Updated Summary of Additional Enhancement Requests
+
+| # | Enhancement | Priority | Estimated Effort | Schema Changes | Profile Bump |
+|---|-------------|----------|------------------|----------------|--------------|
+| #6 | Department dropdown alphabetical sorting | High | 0.5-1 hour | No | No |
+| #7 | Add "Return to home" link to hazard form | Medium | 0.5-1 hour | No | No |
+| #8 | Improve mandatory field validation feedback | High | 2-3 hours | No | No |
+| #9 | Print view for forms and reports | Medium | 1.5-2 hours | No | No |
+
+**Total Estimated Effort:** 4.5-7 hours
+
+**Implementation Grouping:**
+
+**Group 1: Quick Wins (1-2 hours)**
+- Request #6: Department dropdown sorting
+- Request #7: Return to home link
+- Can be completed together in one session
+
+**Group 2: Major UX Enhancements (3.5-5 hours)**
+- Request #8: Mandatory field validation (2-3 hours)
+- Request #9: Print view functionality (1.5-2 hours)
+- Can be implemented in same release but as separate work sessions
+
+**Recommended Versioning:**
+- v0.10.19: Form Enhancements (Requests #2-#5) - Profile 19 ✓ Current plan
+- v0.10.20: UX Enhancements (Requests #6-#9) - Profile 19 (no bump needed)
+
+**Release Strategy:**
+- **Option A:** Single v0.10.20 release with all four enhancements (4.5-7 hours)
+- **Option B:** Two releases:
+  - v0.10.19.1: Quick Wins (#6, #7) - 1-2 hours
+  - v0.10.20: Major UX (#8, #9) - 3.5-5 hours
+- **Option C:** Individual releases as each is completed (most flexible)
+
+**Recommended:** Option A (single v0.10.20 release) for efficiency and consolidated testing/deployment.
