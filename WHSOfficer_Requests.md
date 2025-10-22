@@ -1892,5 +1892,440 @@ Implement **Requests #2, #3, #4, and #5 together** as they all affect question n
 
 ---
 
+## Request #10: Fix Q13 Title Field - Remove from Form & Update Generation Formula
+
+**Date Requested:** October 21, 2025
+**Status:** ⏳ Planning
+**Priority:** High
+**Applies To:** Incidents only (authenticated and anonymous forms)
+
+### Background
+
+The WHS Officer identified a mismatch between the Q13 title field label and the actual auto-generation behavior, and requested that the field be made mandatory and non-modifiable. After analysis, the decision was made to remove Q13 from the user-facing form entirely and generate the title server-side.
+
+### Current Implementation
+
+**Q13 Field Issues:**
+
+From `report_incident.pt` lines 433-447:
+```html
+<!-- Q13: Title (auto-generated) -->
+<div class="whs-form-field">
+    <label for="title">
+        13. Brief title / summary
+        <span class="required">*</span>
+    </label>
+    <p class="field-description">
+        This will be auto-generated from the town and date, but you can edit it if needed (max 200 characters)
+    </p>
+    <input type="text"
+           id="title"
+           name="title"
+           maxlength="200"
+           class="whs-input"
+           placeholder="Will auto-generate from location and date" />
+</div>
+```
+
+**Current Title Generation (JavaScript):**
+
+From `incident_form.js` lines 1338-1413:
+- Formula: `{Incident Type} - {Department} - {Location Town}`
+- Example: "First Aid Injury - Biosecurity - Cooktown"
+
+**Problems:**
+1. Label says "auto-generated from town and date" but actually uses incident type, department, and location town
+2. Field is editable by user (not non-modifiable as requested)
+3. JavaScript generation is less reliable than server-side
+4. Users don't need to see this field during data entry
+5. Formula doesn't match WHS Officer's requirements
+
+### Requested Changes
+
+#### Change 10A: Remove Q13 from Form Templates
+
+**Action:** Completely remove the Q13 title field from both authenticated and anonymous incident forms
+
+**Rationale:**
+- Users don't need to see title during form entry
+- Title visible in incident views, listings, and search results after submission
+- Cleaner UX without confusion about editable vs non-editable fields
+- Server-side generation more reliable than JavaScript
+- Eliminates label/description mismatch
+
+**Files affected:**
+- `csc/src/csc/whs/browser/templates/report_incident.pt`
+- `csc/src/csc/whs/browser/templates/anonymous_form.pt`
+
+#### Change 10B: Update Title Generation Formula
+
+**Current Formula:**
+```
+{Incident Type} - {Department} - {Location Town}
+```
+
+**New Formula:**
+```
+{Injury Type} - {Person Name} - {Town/Locality} - {Date}
+```
+
+**Example:**
+- Old: "First Aid Injury - Biosecurity - Cooktown"
+- New: "Sprain/Strain - John Smith - Cooktown - 21/10/2025"
+
+**Field Mapping:**
+- **Injury Type:** `injury_classifications` field (first selected if multiple)
+  - Values: Sprain/Strain, Laceration/Cut, Bruise/Contusion, Fracture, etc.
+- **Person Name:** `injured_person_name` field
+  - Full name of person injured or principally involved
+- **Town/Locality:** `location_town` field
+  - Town or suburb where incident occurred
+- **Date:** `incident_date` field
+  - Format: DD/MM/YYYY
+
+#### Change 10C: Implement Server-Side Title Generation
+
+**Location:** `csc/src/csc/whs/browser/intake.py` and `anonymous.py`
+
+**Implementation:**
+1. Generate title in intake processing after form validation
+2. Set Dublin Core title before object creation
+3. Handle edge cases (missing fields, multiple injury types, etc.)
+
+**Pseudocode:**
+```python
+def generate_incident_title(incident_data):
+    """Generate incident title from key fields
+
+    Returns: "Injury Type - Person Name - Town - Date"
+    """
+    # Get injury type (first selected, or "Not Specified")
+    injury_type = incident_data.get('injury_classifications', [])[0] if incident_data.get('injury_classifications') else 'Not Specified'
+
+    # Get person name
+    person_name = incident_data.get('injured_person_name', 'Unknown')
+
+    # Get location town
+    location_town = incident_data.get('location_town', 'Unknown Location')
+
+    # Get date (format DD/MM/YYYY)
+    incident_date = incident_data.get('incident_date')
+    date_str = incident_date.strftime('%d/%m/%Y') if incident_date else 'No Date'
+
+    # Generate title
+    title = f"{injury_type} - {person_name} - {location_town} - {date_str}"
+
+    return title
+```
+
+#### Change 10D: Remove JavaScript Title Generation
+
+**File:** `csc/src/csc/whs/browser/static/incident_form.js`
+
+**Action:** Remove `initializeTitleAutoGeneration()` function and related code (lines 1338-1413)
+
+**Impact:** JavaScript no longer needed for title generation
+
+#### Change 10E: Update Question Numbering
+
+**Action:** Renumber questions after Q13 removal
+
+**Impact:**
+- Current Q14 (What happened) → Q13
+- Current Q15 (Immediate Actions) → Q14
+- Current Q16 (Emergency Services Called) → Q15
+- Current Q17 (Emergency Services Types) → Q16
+- All subsequent questions shift up by 1
+
+**Note:** This assumes Requests #2-#5 have been implemented. If not, numbering may differ.
+
+### Implementation Plan
+
+#### Phase 1: Remove Q13 from Form Templates
+
+**Files:**
+- `csc/src/csc/whs/browser/templates/report_incident.pt`
+- `csc/src/csc/whs/browser/templates/anonymous_form.pt`
+
+**Changes:**
+1. Delete Q13 title field div (lines ~433-447 in report_incident.pt)
+2. Renumber subsequent questions (Q14→Q13, Q15→Q14, etc.)
+3. Update all question number references in labels
+
+#### Phase 2: Add Title Generation Utility Function
+
+**File:** `csc/src/csc/whs/utilities.py` (create if doesn't exist)
+
+**Add function:**
+```python
+def generate_incident_title(injury_classifications, injured_person_name, location_town, incident_date):
+    """Generate incident title for automatic naming
+
+    Args:
+        injury_classifications: List of injury classification tokens (e.g., ['sprain-strain'])
+        injured_person_name: Full name of person injured or principally involved
+        location_town: Town or suburb where incident occurred
+        incident_date: Date object of incident
+
+    Returns:
+        str: Generated title (e.g., "Sprain/Strain - John Smith - Cooktown - 21/10/2025")
+    """
+    # Implementation here
+```
+
+#### Phase 3: Update Intake Processing
+
+**Files:**
+- `csc/src/csc/whs/browser/intake.py` (authenticated form)
+- `csc/src/csc/whs/browser/anonymous.py` (anonymous form)
+
+**Changes:**
+1. Import title generation function
+2. Generate title after form validation
+3. Set incident.title with generated value
+4. Remove any existing title extraction from form data
+
+**Example:**
+```python
+from csc.whs.utilities import generate_incident_title
+
+# After extracting form data and validation
+incident_title = generate_incident_title(
+    injury_classifications=injury_classifications,
+    injured_person_name=injured_person_name,
+    location_town=location_town,
+    incident_date=incident_date
+)
+
+# Set title
+incident.title = incident_title
+incident.setTitle(incident_title)
+```
+
+#### Phase 4: Remove JavaScript Title Generation
+
+**File:** `csc/src/csc/whs/browser/static/incident_form.js`
+
+**Changes:**
+1. Remove `initializeTitleAutoGeneration()` function (lines 1338-1413)
+2. Remove function call from DOMContentLoaded event listener
+3. Remove any related helper functions (if any)
+
+#### Phase 5: Update Schema Comments (Optional)
+
+**File:** `csc/src/csc/whs/interfaces.py`
+
+**Update comment in Section 3:**
+```python
+# ========================================
+# SECTION 3: INCIDENT DETAILS
+# ========================================
+# Title is auto-generated server-side from: Injury Type - Person Name - Location Town - Date
+# Not displayed in form (Dublin Core title field used)
+
+# Q13: What happened (Dublin Core description field)
+# Q14: Immediate Actions Taken
+```
+
+#### Phase 6: Testing Plan
+
+**Unit Tests:**
+1. Test title generation with all fields present
+2. Test title generation with missing injury type (should use "Not Specified")
+3. Test title generation with missing person name (should use "Unknown")
+4. Test title generation with multiple injury types (should use first)
+5. Test title generation with missing date (should handle gracefully)
+
+**Integration Tests:**
+1. Submit authenticated incident form (verify title generated correctly)
+2. Submit anonymous incident form (verify title generated correctly)
+3. Verify title visible in incident view template
+4. Verify title visible in incident listing
+5. Verify title visible in search results
+
+**User Acceptance Testing:**
+1. Create test incident via authenticated form
+2. Verify title not shown during form entry
+3. Submit form and navigate to incident view
+4. Verify title matches pattern: "Injury Type - Person Name - Town - Date"
+5. Create test incident via anonymous form and verify same behavior
+
+#### Phase 7: Documentation Updates
+
+**Files to update:**
+- `csc/README.md` - Document title auto-generation change
+- `PROJECT_STATUS.md` - Add to version notes
+- Form user documentation - Remove references to Q13 title field
+
+### Files to Modify
+
+1. `csc/src/csc/whs/browser/templates/report_incident.pt` - Remove Q13, renumber questions
+2. `csc/src/csc/whs/browser/templates/anonymous_form.pt` - Remove Q13, renumber questions
+3. `csc/src/csc/whs/utilities.py` - Add title generation function (create if needed)
+4. `csc/src/csc/whs/browser/intake.py` - Add server-side title generation
+5. `csc/src/csc/whs/browser/anonymous.py` - Add server-side title generation
+6. `csc/src/csc/whs/browser/static/incident_form.js` - Remove JS title generation
+7. `csc/src/csc/whs/interfaces.py` - Update schema comments (optional)
+
+**Total:** 6-7 files to modify
+
+### Estimated Effort
+
+- **Remove Q13 from templates & renumber:** 1 hour
+- **Create title generation utility:** 0.5 hours
+- **Update intake processing (both forms):** 1 hour
+- **Remove JavaScript code:** 0.25 hours
+- **Testing:** 1 hour
+- **Documentation:** 0.25 hours
+
+**Total: 4 hours**
+
+### Impact Analysis
+
+**Benefits:**
+1. Title always generated consistently (no user variation)
+2. Cleaner user experience (one less field to see/ignore)
+3. Server-side generation more reliable than JavaScript
+4. Title format matches WHS Officer's requirements
+5. Eliminates confusion about editable vs non-editable field
+6. Title visible where it matters (views, listings, search)
+
+**Risks:**
+1. Question numbering changes (Q14→Q13, Q15→Q14, etc.)
+2. Documentation needs updating to reflect new numbering
+3. Users accustomed to seeing title field may ask where it went
+
+**Mitigation:**
+- Update all documentation with new question numbers
+- Add note in form instructions: "Incident title will be generated automatically"
+- Communicate change to WHS Officers before deployment
+
+### Edge Cases to Handle
+
+1. **Missing Injury Classification:** Use "Not Specified" or "Unknown Injury Type"
+2. **Multiple Injury Classifications:** Use first selected classification
+3. **Missing Person Name:** Use "Unknown Person" or fall back to reporter name
+4. **Missing Location Town:** Use "Unknown Location" or extract from location field
+5. **Missing Incident Date:** Use submission date or "No Date"
+6. **Very Long Names/Towns:** Truncate title to 200 chars (Dublin Core title max length)
+
+**Formula with Edge Cases:**
+```python
+injury_type = injury_classifications[0] if injury_classifications else "Not Specified"
+person_name = injured_person_name or "Unknown Person"
+location_town = location_town or "Unknown Location"
+date_str = incident_date.strftime('%d/%m/%Y') if incident_date else "No Date"
+
+title = f"{injury_type} - {person_name} - {location_town} - {date_str}"
+
+# Truncate if needed
+if len(title) > 200:
+    title = title[:197] + "..."
+```
+
+### User Experience Comparison
+
+**Before (Current):**
+- Q13 visible in form with placeholder "Will auto-generate from location and date"
+- User sees title field but description doesn't match behavior
+- JavaScript generates title from incident type, department, town
+- User can edit title (but shouldn't)
+- Confusion about what title will be
+
+**After (Request #10):**
+- Q13 not visible in form
+- No confusion about editable fields
+- Title generated server-side with correct formula
+- User doesn't need to think about title during entry
+- Title visible in views/listings after submission with predictable format: "Injury Type - Person Name - Town - Date"
+
+### Integration Notes
+
+**This change integrates well with:**
+- Request #2: Already makes immediate actions mandatory
+- Request #3: Already adds question numbering to Section 3
+- Request #4: Emergency services fields (Q16-Q17 become Q15-Q16)
+
+**Can be implemented:**
+- Standalone (if Requests #2-#5 not implemented yet)
+- Together with other Section 3 enhancements
+- As part of larger form improvement release
+
+### Question Numbering After Implementation
+
+**Section 3 (Incident Details):**
+- ~~Q13: Title (REMOVED)~~
+- Q13: What happened (was Q14)
+- Q14: Immediate Actions (was Q15)
+- Q15: Emergency Services Called (was Q16)
+- Q16: Emergency Services Types (was Q17)
+
+**Section 4+ shift up by 1:**
+- All subsequent sections renumbered accordingly
+
+---
+
+## Summary: All WHS Officer Requests
+
+### Request Overview
+
+| # | Request | Priority | Files | Effort | Impact |
+|---|---------|----------|-------|--------|--------|
+| 1 | Replace Division with Department | High | 18 | 8-10h | Moderate - Data migration |
+| 2 | Section 3 Enhancements (Title, Required) | Medium | 8 | 5-6h | Low - New submissions only |
+| 3 | Number Section 3 Questions | Low | 2-4 | 1-1.25h | None - Cosmetic |
+| 4 | Move Emergency Services to Section 3 | Medium | 14 | 9h | High - Breaking change |
+| 5 | Add Plant Number Field | Low | 7-8 | 2-2.5h | None - New field |
+| **10** | **Fix Q13 Title Field - Remove & Update Formula** | **High** | **6-7** | **4h** | **Medium - Question renumbering** |
+
+**Total Estimated Effort: 29.5-32.75 hours (traditional development)**
+
+### Updated Implementation Strategy
+
+**Recommended Approach:**
+
+Since Request #10 directly modifies the title generation behavior from Request #2, these should be implemented together:
+
+**Phase A (v0.10.28): Title & Section 3 Enhancements**
+- Request #2: Section 3 field requirements (modify title approach)
+- Request #3: Number Section 3 Questions
+- Request #10: Remove Q13, server-side title generation
+- Estimated: 6-7 hours (combined with efficiencies)
+
+**Phase B (v0.10.29): Emergency Services Enhancement**
+- Request #4: Move emergency services to Section 3
+- Estimated: 9 hours
+
+**Phase C (Later): Department & Plant Number**
+- Request #1: Division→Department (complex, standalone)
+- Request #5: Plant Number (can be added anytime)
+- Estimated: 10.5-12.5 hours
+
+### Deployment Dependencies
+
+**Must be implemented together:**
+- Request #2 and Request #10 (both affect title generation)
+- Request #3 with either #2 or #10 (question numbering)
+
+**Can be implemented independently:**
+- Request #1 (Division→Department) - standalone
+- Request #4 (Emergency Services) - affects question numbering
+- Request #5 (Plant Number) - minimal impact
+
+---
+
+## Change Log
+
+| Date | Version | Request | Status | Notes |
+|------|---------|---------|--------|-------|
+| 2025-10-18 | 0.10.18 | Request #1: Replace Division with Department | Planning | Implementation plan created |
+| 2025-10-18 | 0.10.18/19 | Request #2: Incident Form Section 3 Enhancements | Planning | Title auto-generation, required fields |
+| 2025-10-18 | 0.10.18/19 | Request #3: Number Section 3 Questions | Planning | Add Q13-Q15 numbering for consistency |
+| 2025-10-18 | 0.10.18/19 | Request #4: Move Emergency Services to Section 3 | Planning | Q16-Q17, conditional multi-select, data migration required |
+| 2025-10-18 | 0.10.18/19 | Request #5: Add Plant Number Field | Planning | Q27 in Section 5, optional field |
+| 2025-10-21 | 0.10.28 | Request #10: Fix Q13 Title Field - Remove & Update Formula | Planning | Remove Q13 from form, server-side generation with new formula |
+
+---
+
 **Document Maintained By:** Cook Shire Council IT Department
-**Last Updated:** October 18, 2025
+**Last Updated:** October 21, 2025

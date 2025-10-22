@@ -64,11 +64,14 @@ The WHSPortal project consists of multiple independent repositories housed in a 
 ### Active Repositories (each with own git)
 
 1. **csc/** - [git repository]
-   - Package: `csc.whs` (currently v0.10.16, profile v17)
+   - Package: `csc.whs` (currently v0.10.27, profile v19)
    - Purpose: Core WHS incident & hazard reporting and management
-   - Features: Incident/hazard content types, workflows, LDAP integration, GPS mapping, 5×5 risk matrix, email notifications, custom folder listings, interactive SVG body map
+   - **Content Types**:
+     - `csc.whs.incident` - Workplace incidents with injury/damage (reporting view: `/@@report-incident`)
+     - `csc.whs.hazard` - Workplace hazards and risks (reporting view: `/@@report-hazard`)
+   - Features: Dexterity content types, custom browser views, workflows, LDAP integration, GPS mapping, 5×5 risk matrix, email notifications, custom folder listings, interactive SVG body map
    - Built from: `pyproject.toml`
-   - Recent: v0.10.16 Phase 2 Complete - Interactive body map, enhanced incident view, legacy fields hidden
+   - Recent: v0.10.27 Phase B Complete - Form enhancements, emergency services tracking, print view, validation improvements
 
 2. **csc.whstheme/** - [git repository]
    - Package: `cook.whs.barceloneta` (v1.0.27)
